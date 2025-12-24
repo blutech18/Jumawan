@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -11,6 +12,8 @@ export function HeroSection() {
   const fullName = "Cristan Jade Jumawan";
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Use a rAF-driven loop for smoother typing animation and fewer timers
@@ -61,14 +64,39 @@ export function HeroSection() {
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Download CV handler
+  // Download CV handler with duplicate-click protection
   const handleDownloadCV = () => {
-    const link = document.createElement('a');
-    link.href = '/Jumawan-Resume-UPDATED.png';
-    link.download = 'Jumawan-Resume-UPDATED.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (isDownloading) {
+      // Inform the user instead of starting another download
+      toast({
+        title: "Download already in progress",
+        description: "Your CV download has already started. Please check your browser's downloads.",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+
+    const currentToast = toast({
+      title: "Downloading CV",
+      description: "Resume download has started.",
+    });
+
+    try {
+      const link = document.createElement("a");
+      link.href = "/Jumawan-Resume-UPDATED.png";
+      // Rename the downloaded file for the user
+      link.download = "Jumawan-Resume";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      // Close toast & re-enable button after ~2.5 seconds
+      setTimeout(() => {
+        currentToast.dismiss();
+        setIsDownloading(false);
+      }, 2500);
+    }
   };
 
   return (
@@ -198,7 +226,8 @@ export function HeroSection() {
                     onClick={handleDownloadCV}
                     variant="ghost"
                     size="sm"
-                    className="px-0 text-sm font-normal hover:bg-transparent hover:underline hover:text-primary hover:shadow-none focus-visible:ring-0 transition-colors"
+                    disabled={isDownloading}
+                    className="px-0 text-sm font-normal hover:bg-transparent hover:underline hover:text-primary hover:shadow-none focus-visible:ring-0 transition-colors disabled:opacity-60"
                   >
                     <Download className="mr-2 h-5 w-5" />
                     Download CV
