@@ -1,0 +1,79 @@
+import { useState, useRef, useEffect } from 'react'
+
+interface OptimizedImageProps {
+  src: string
+  alt: string
+  className?: string
+  fallbackIcon?: React.ReactNode
+  onError?: () => void
+}
+
+export const OptimizedImage = ({ 
+  src, 
+  alt, 
+  className = '', 
+  fallbackIcon,
+  onError 
+}: OptimizedImageProps) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    const img = imgRef.current
+    if (!img) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          img.src = src
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(img)
+    return () => observer.disconnect()
+  }, [src])
+
+  const handleLoad = () => {
+    setIsLoaded(true)
+  }
+
+  const handleError = () => {
+    setHasError(true)
+    onError?.()
+  }
+
+  if (hasError) {
+    return (
+      <div className={`flex items-center justify-center bg-navy-700 rounded-lg ${className}`}>
+        {fallbackIcon || (
+          <div className="text-muted-foreground text-center">
+            <div className="w-8 h-8 mx-auto mb-1">📷</div>
+            <span className="text-xs">Image</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-navy-700 rounded-lg animate-pulse">
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      )}
+      <img
+        ref={imgRef}
+        alt={alt}
+        className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading="lazy"
+      />
+    </div>
+  )
+}
