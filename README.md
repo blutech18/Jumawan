@@ -1,73 +1,149 @@
-# Welcome to your Lovable project
+## Cristan Jade Jumawan – Portfolio (Frontend)
 
-## Project info
+This project is the **public portfolio site** for Cristan Jade Jumawan.  
+It is a React + TypeScript single‑page application built with Vite, Tailwind CSS, and shadcn‑ui, backed by Supabase for data and storage.
 
-**URL**: https://lovable.dev/projects/2b5859b4-5498-4733-a067-9d405e7ee049
+The admin panel that manages this portfolio lives in a separate project: `Jumawan_Portfolio-Admin`.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Hero & About** – Intro, professional summary, and carousel imagery.
+- **Skills & Tools** – Detailed skills grid and tools carousel.
+- **Work Experience** – Dynamic timeline backed by the `work_experience` table in Supabase.
+- **Certificates & Achievements** – Dynamic list backed by the `certificates` table.
+- **Featured Projects** – Dynamic grid backed by the `projects` table with modal view.
+- **Contact / “Let’s Work Together”** – Contact form that writes to the `contact_messages` table.
+- **Analytics** – Page‑view and contact‑form events stored in the `analytics` table, used by the admin Analytics page.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2b5859b4-5498-4733-a067-9d405e7ee049) and start prompting.
+All dynamic content (projects, certificates, experience, contact messages, analytics) is managed via the **admin app** and rendered read‑only here.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Framework**: React 18 + TypeScript
+- **Tooling**: Vite
+- **Styling**: Tailwind CSS, custom navy theme
+- **UI Library**: shadcn‑ui (Radix primitives)
+- **Data**: Supabase (PostgreSQL + Storage)
+- **State / Data Fetching**: @tanstack/react-query
+- **Animations**: Framer Motion
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## Local Development
+
+### 1. Prerequisites
+
+- Node.js 18+ and npm
+- A Supabase project (same instance as the admin app)
+
+### 2. Install dependencies
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+cd Jumawan_Portfolio
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 3. Environment variables
 
-# Step 3: Install the necessary dependencies.
-npm i
+Create a `.env.local` file in `Jumawan_Portfolio` with:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```sh
+VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+These are used in `src/lib/supabase.ts` to create the Supabase client.
+
+### 4. Database setup (Supabase)
+
+In your Supabase SQL editor, run the migrations from the `migrations/` folder:
+
+1. Either run `complete_setup.sql` to create everything at once, **or** run in order:
+   - `001_create_helpers.sql`
+   - `002_create_projects.sql`
+   - `003_create_certificates.sql`
+   - `004_create_contact_messages.sql`
+   - `005_create_analytics.sql`
+   - `006_create_storage_bucket.sql`
+   - `007_fix_storage_rls.sql`
+   - `009_create_work_experience.sql`
+
+These scripts create and configure:
+
+- `projects` – Featured projects shown in **Featured Projects**.
+- `certificates` – Certificates shown in **Certificates & Achievements**.
+- `contact_messages` – Messages from the **Let’s Work Together** contact form.
+- `analytics` – Page views and events used on the Analytics page in the admin app.
+- `work_experience` – Entries for the **Work Experience** section.
+- Public `images` storage bucket for project / certificate images.
+
+> The admin app (`Jumawan_Portfolio-Admin`) expects the same schema and uses service‑style CRUD for these tables.
+
+### 5. Run the dev server
+
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+By default, Vite is configured to run on **http://localhost:8080** (see `vite.config.ts`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## How this app talks to Supabase
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Supabase client is defined in `src/lib/supabase.ts`.
+- Sections that read data:
+  - Projects: `src/components/sections/projects-section.tsx` → `projects` table
+  - Certificates: `src/components/sections/certificates-section-dynamic.tsx` → `certificates` table
+  - Work Experience: `src/components/sections/experience-section.tsx` → `work_experience` table
+  - Contact form: `src/components/sections/contact-section-dynamic.tsx` → `contact_messages` table
+- Analytics events:
+  - Section page views insert into `analytics` with `event_type = 'page_view'`.
+  - Contact form submissions also add an `analytics` row for `contact_form_submission`.
 
-## What technologies are used for this project?
+These analytics are read on the admin side by `analytics.service.ts`.
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Relationship to the Admin App
 
-## How can I deploy this project?
+- **This project**: public portfolio UI only; no authentication; all data comes from Supabase.
+- **`Jumawan_Portfolio-Admin`**: separate Vite/React + Supabase project that:
+  - Manages projects, certificates, work experience, and contact messages.
+  - Shows dashboard stats and analytics based on the same Supabase tables.
 
-Simply open [Lovable](https://lovable.dev/projects/2b5859b4-5498-4733-a067-9d405e7ee049) and click on Share -> Publish.
+To see update flow end‑to‑end:
 
-## Can I connect a custom domain to my Lovable project?
+1. Log into the admin app and create / edit projects, certificates, or work experience.
+2. Refresh this portfolio – the public sections will reflect the latest Supabase data.
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Deployment Notes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+You can deploy this Vite app to any static hosting that supports SPA builds:
+
+1. Build:
+
+```sh
+npm run build
+```
+
+2. Deploy the `dist/` folder to your platform of choice (Vercel, Netlify, Cloudflare Pages, etc.).
+3. Make sure the production environment has the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values as your local setup.
+
+Supabase database and storage stay the same for both local and production; only the frontend host changes.
+
+---
+
+## Scripts
+
+- `npm run dev` – Start local dev server.
+- `npm run build` – Build for production.
+- `npm run preview` – Preview the production build locally.
+- `npm run lint` – Run ESLint on the project.
+
