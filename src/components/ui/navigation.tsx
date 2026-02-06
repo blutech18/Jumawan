@@ -13,10 +13,15 @@ const navigationItems = [
   { name: "Contact", href: "#contact" },
 ];
 
+import { useLenis } from "lenis/react";
+
+
+
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const lenis = useLenis();
 
   useEffect(() => {
     let ticking = false;
@@ -32,7 +37,8 @@ export function Navigation() {
       for (const section of sections) {
         const element = document.getElementById(section);
         if (!element) continue;
-        const offsetTop = element.offsetTop;
+
+        const offsetTop = element.getBoundingClientRect().top + window.scrollY;
         if (scrollPosition >= offsetTop) currentSection = section;
       }
 
@@ -61,14 +67,21 @@ export function Navigation() {
 
       const header = document.querySelector("header");
       const headerHeight = (header as HTMLElement | null)?.offsetHeight ?? 0;
-      const targetY = element.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
-      
-      window.scrollTo({ top: Math.max(targetY, 0), behavior: "smooth" });
-      
+      // Offset needs to be negative to leave space for the header
+      const offset = -headerHeight - 8;
+
+      if (lenis) {
+        lenis.scrollTo(element, { offset });
+      } else {
+        // Fallback if lenis is not available (though it should be)
+        const targetY = element.getBoundingClientRect().top + window.scrollY + offset;
+        window.scrollTo({ top: Math.max(targetY, 0), behavior: "smooth" });
+      }
+
       // Update active section after scroll animation completes
       setTimeout(() => {
         setActiveSection(sectionId);
-      }, 800); // Wait for smooth scroll to complete
+      }, 1000); // Slightly longer wait for smooth scroll
     };
 
     if (isMobileMenuOpen) {
@@ -87,8 +100,8 @@ export function Navigation() {
       transition={{ duration: 1.2, type: "spring", stiffness: 80, damping: 20 }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled 
-          ? "bg-white/10 backdrop-blur-md shadow-lg" 
+        isScrolled
+          ? "bg-[#021021]/80 backdrop-blur-md shadow-lg"
           : "bg-transparent py-4"
       )}
       style={{ transform: "translateZ(0)", willChange: "transform" }}
@@ -118,93 +131,81 @@ export function Navigation() {
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
                 className={cn(
-                  "relative px-3 py-2 text-sm font-medium transition-colors duration-200",
-                  "hover:text-primary",
+                  "text-sm font-medium transition-colors hover:text-primary relative group",
                   activeSection === item.href.substring(1)
                     ? "text-primary"
-                    : "text-muted-foreground"
+                    : "text-foreground/80"
                 )}
               >
                 {item.name}
-                {activeSection === item.href.substring(1) && (
-                  <motion.div
-                    layoutId="activeSection"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
+                <span className={cn(
+                  "absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full",
+                  activeSection === item.href.substring(1) && "w-full"
+                )} />
               </button>
             ))}
-            
+
             {/* Social Icons */}
-            <div className="flex items-center gap-4 ml-6 border-l border-border/20 pl-6">
+            <div className="flex items-center space-x-2 ml-2 border-l border-white/10 pl-6">
               <a
-                href="https://github.com/blutech18"
+                href="https://github.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-10 h-10 rounded-lg hover:shadow-glow transition-all duration-300 hover:scale-110"
+                aria-label="GitHub"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/10 text-foreground/70 hover:text-primary transition-all duration-300"
               >
-                <Github className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                <Github className="h-4 w-4" />
               </a>
               <a
                 href="https://www.linkedin.com/in/cristan-jade-jumawan-45b27b39b"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-10 h-10 rounded-lg hover:shadow-glow transition-all duration-300 hover:scale-110"
+                aria-label="LinkedIn"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/10 text-foreground/70 hover:text-primary transition-all duration-300"
               >
-                <Linkedin className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+                <Linkedin className="h-4 w-4" />
               </a>
             </div>
           </div>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
+          <button
+            className="md:hidden text-foreground hover:text-primary transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </Button>
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-
-        {/* Mobile Navigation */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
-              transition={{ 
-                duration: 0.3, 
-                ease: [0.4, 0.0, 0.2, 1],
-                opacity: { duration: 0.2 },
-                height: { duration: 0.3 },
-                y: { duration: 0.3 }
-              }}
-              className="md:hidden mt-4 py-4 border-t border-border/20 bg-slate-900/70 backdrop-blur-md rounded-lg"
-            >
-              <div className="flex flex-row justify-center space-x-4">
-                {navigationItems.map((item) => (
-                  <button
-                    key={item.name}
-                    onClick={() => scrollToSection(item.href)}
-                    className={cn(
-                      "px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-lg",
-                      "hover:text-white hover:bg-white/10",
-                      activeSection === item.href.substring(1)
-                        ? "text-sky-400 font-bold"
-                        : "text-white/70"
-                    )}
-                  >
-                    {item.name}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-navy-900/95 backdrop-blur-md border-t border-white/10 overflow-hidden"
+          >
+            <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => scrollToSection(item.href)}
+                  className={cn(
+                    "text-left py-2 text-base font-medium transition-colors hover:text-primary",
+                    activeSection === item.href.substring(1)
+                      ? "text-primary"
+                      : "text-foreground/80"
+                  )}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }

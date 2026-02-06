@@ -18,11 +18,11 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { supabase, Project } from "@/lib/supabase";
+import { useProjectStore } from "@/stores/useProjectStore";
 
 export function ProjectsSection() {
   const shouldReduceMotion = useReducedMotion();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { projects, loading, fetchProjects } = useProjectStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -30,7 +30,7 @@ export function ProjectsSection() {
   useEffect(() => {
     fetchProjects();
     trackPageView();
-  }, []);
+  }, [fetchProjects]);
 
   const trackPageView = async () => {
     try {
@@ -43,23 +43,6 @@ export function ProjectsSection() {
         }]);
     } catch (error) {
       console.error('Analytics tracking error:', error);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('featured', true)
-        .order('order_index', { ascending: true });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -140,7 +123,7 @@ export function ProjectsSection() {
 
   if (loading) {
     return (
-      <section id="projects" className="py-20 bg-navy-800/30 relative overflow-hidden">
+      <section id="projects" className="py-20 bg-transparent relative overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
@@ -196,28 +179,25 @@ export function ProjectsSection() {
   }
 
   return (
-    <section id="projects" className="py-20 bg-navy-800/30 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-
+    <section id="projects" className="py-20 bg-transparent relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           ref={ref}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
           variants={containerVariants}
-          className="text-center mb-16"
+          className="flex flex-col items-center mb-16 mx-auto w-fit"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Featured Projects
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A showcase of my best work and creative solutions
-          </p>
+          <div className="flex items-center justify-center gap-3 w-full">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
+          </div>
         </motion.div>
 
         {projects.length === 0 ? (

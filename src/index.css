@@ -9,55 +9,68 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Portfolio Dark Navy Theme */
-    --background: 227 100% 8%;  /* Navy #010626 */
+    --background: 227 100% 8%;
+    /* Navy #010626 */
     --foreground: 210 40% 98%;
-    
-    --card: 227 95% 12%;  /* Slightly lighter navy */
+
+    --card: 227 95% 12%;
+    /* Slightly lighter navy */
     --card-foreground: 210 40% 98%;
-    
+
     --popover: 227 95% 12%;
     --popover-foreground: 210 40% 98%;
-    
-    --primary: 202 85% 55%;  /* Sky blue */
+
+    --primary: 202 85% 55%;
+    /* Sky blue */
     --primary-foreground: 227 100% 8%;
-    
-    --secondary: 227 85% 18%;  /* Medium navy */
+
+    --secondary: 227 85% 18%;
+    /* Medium navy */
     --secondary-foreground: 210 40% 98%;
-    
+
     --muted: 220 45% 25%;
     --muted-foreground: 215 20.2% 65.1%;
-    
-    --accent: 197 100% 70%;  /* Light sky blue */
+
+    --accent: 197 100% 70%;
+    /* Light sky blue */
     --accent-foreground: 227 100% 8%;
-    
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    
+
     --border: 220 45% 25%;
     --input: 220 45% 25%;
-    --ring: 197 100% 70%;  /* Sky blue ring */
-    
-    --radius: 1rem;  /* Larger radius for premium feel */
-    
+    --ring: 197 100% 70%;
+    /* Sky blue ring */
+
+    --radius: 1rem;
+    /* Larger radius for premium feel */
+
     /* Custom Portfolio Colors */
-    --navy-900: 227 100% 8%;   /* #010626 - Main background */
-    --navy-800: 227 95% 12%;   /* Cards and surfaces */
-    --navy-700: 227 85% 18%;   /* Secondary elements */
-    --blue-600: 202 85% 55%;   /* Primary blue */
-    --sky-400: 197 100% 70%;   /* Accent sky blue */
-    --sky-300: 198 93% 80%;    /* Light accents */
-    
+    --navy-900: 227 100% 8%;
+    /* #010626 - Main background */
+    --navy-800: 227 95% 12%;
+    /* Cards and surfaces */
+    --navy-700: 227 85% 18%;
+    /* Secondary elements */
+    --blue-600: 202 85% 55%;
+    /* Primary blue */
+    --sky-400: 197 100% 70%;
+    /* Accent sky blue */
+    --sky-300: 198 93% 80%;
+    /* Light accents */
+
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--navy-900)), hsl(var(--navy-700)), hsl(var(--sky-400)));
+    --gradient-hero: linear-gradient(180deg, hsl(227 100% 12%) 0%, hsl(227 100% 6%) 50%, #030014 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--navy-800)), hsl(var(--navy-700)));
     --gradient-border: linear-gradient(135deg, hsl(var(--sky-400)), hsl(var(--blue-600)));
     --gradient-glow: radial-gradient(circle at center, hsl(var(--sky-400) / 0.2), transparent 70%);
-    
+
     /* Shadows */
     --shadow-elegant: 0 20px 40px -12px hsl(var(--navy-900) / 0.8);
     --shadow-glow: 0 0 20px hsl(var(--sky-400) / 0.2);
     --shadow-card: 0 8px 32px -8px hsl(var(--navy-900) / 0.6);
-    
+
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -72,15 +85,40 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply bg-background text-foreground overflow-x-hidden select-none;
+    /* select-none disables selection */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure inputs are still selectable if needed */
+  input,
+  textarea {
+    @apply select-text;
   }
 }
 
 @layer utilities {
-  html {
-    scroll-behavior: smooth;
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
   }
 
   /* Enable momentum scrolling on iOS */
@@ -90,7 +128,10 @@ All colors MUST be HSL.
 
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.001ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
@@ -99,9 +140,12 @@ All colors MUST be HSL.
   }
 
   @keyframes gradient-x {
-    0%, 100% {
+
+    0%,
+    100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }

@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Award, Calendar, ExternalLink, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, BadgeCheck } from "lucide-react";
 import { supabase, Certificate } from "@/lib/supabase";
+import { useCertificateStore } from "@/stores/useCertificateStore";
 
 export function CertificatesSection() {
   const shouldReduceMotion = useReducedMotion();
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { certificates, loading, fetchCertificates } = useCertificateStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -30,7 +30,7 @@ export function CertificatesSection() {
   useEffect(() => {
     fetchCertificates();
     trackPageView();
-  }, []);
+  }, [fetchCertificates]);
 
   const trackPageView = async () => {
     try {
@@ -43,22 +43,6 @@ export function CertificatesSection() {
         }]);
     } catch (error) {
       console.error('Analytics tracking error:', error);
-    }
-  };
-
-  const fetchCertificates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('certificates')
-        .select('*')
-        .order('order_index', { ascending: true });
-
-      if (error) throw error;
-      setCertificates(data || []);
-    } catch (error) {
-      console.error('Error fetching certificates:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -139,7 +123,7 @@ export function CertificatesSection() {
 
   if (loading) {
     return (
-      <section id="certificates" className="py-20 relative overflow-hidden" style={{ backgroundColor: 'hsl(227 100% 8% / 0.5)' }}>
+      <section id="certificates" className="py-20 relative overflow-hidden bg-transparent">
         <div className="w-full px-6 md:px-10 lg:px-16 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -190,28 +174,25 @@ export function CertificatesSection() {
   }
 
   return (
-    <section id="certificates" className="py-20 relative overflow-hidden" style={{ backgroundColor: 'hsl(227 100% 8% / 0.5)' }}>
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-
+    <section id="certificates" className="py-20 relative overflow-hidden bg-transparent">
       <div className="w-full px-6 md:px-10 lg:px-16 relative z-10">
         <motion.div
           ref={ref}
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
           variants={containerVariants}
-          className="text-center mb-16"
+          className="flex flex-col items-center mb-16 mx-auto w-fit"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Certificates & Achievements
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Professional certifications and achievements that validate my technical expertise
-          </p>
+          <div className="flex items-center justify-center gap-3 w-full">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
+          </div>
         </motion.div>
 
         {certificates.length === 0 ? (
@@ -298,19 +279,19 @@ export function CertificatesSection() {
                         </span>
                       )}
                     </div>
-                    
+
                     {cert.description && (
                       <p className="text-muted-foreground mb-4 leading-relaxed">
                         {cert.description}
                       </p>
                     )}
-                    
+
                     {cert.credential_id && (
                       <div className="text-sm text-muted-foreground mb-4">
                         <span className="font-medium">Credential ID:</span> {cert.credential_id}
                       </div>
                     )}
-                    
+
                     {/* Action buttons removed by request */}
                   </div>
                 </Card>
@@ -387,7 +368,7 @@ export function CertificatesModal({
           </div>
         </AlertDialogHeader>
         <div className="relative w-full">
-          <div className={`relative w-full h-[70vh] sm:h-[72vh] md:h-[65vh] lg:h-[70vh] bg-background border-t border-border/30 overflow-hidden`}> 
+          <div className={`relative w-full h-[70vh] sm:h-[72vh] md:h-[65vh] lg:h-[70vh] bg-background border-t border-border/30 overflow-hidden`}>
             {cert.image_url ? (
               <OptimizedImage
                 src={cert.image_url}
