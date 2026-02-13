@@ -4,27 +4,50 @@ import './index.css'
 
 // Global error handler for script loading errors (e.g., Vercel Analytics)
 window.addEventListener('error', (event) => {
-  // Suppress errors from Vercel Analytics or other third-party scripts
-  if (event.filename && (
-    event.filename.includes('webpage_content_reporter') ||
-    event.filename.includes('vercel') ||
-    event.filename.includes('analytics')
-  )) {
+  const filename = event.filename || '';
+  const message = event.message || '';
+  
+  // Suppress errors from Vercel Analytics webpage_content_reporter script
+  if (
+    filename.includes('webpage_content_reporter') ||
+    filename.includes('vercel') ||
+    filename.includes('analytics') ||
+    message.includes('webpage_content_reporter') ||
+    message.includes('Unexpected token') && (filename.includes('vercel') || filename.includes('analytics'))
+  ) {
     event.preventDefault();
+    event.stopPropagation();
     return false;
   }
   
   // Suppress WebSocket connection errors from Supabase
-  if (event.message && (
-    event.message.includes('WebSocket') ||
-    event.message.includes('websocket') ||
-    event.message.includes('wss://') ||
-    event.message.includes('realtime')
-  )) {
+  if (
+    message.includes('WebSocket') ||
+    message.includes('websocket') ||
+    message.includes('wss://') ||
+    message.includes('realtime')
+  ) {
     event.preventDefault();
+    event.stopPropagation();
     return false;
   }
 }, true);
+
+// Also catch errors during script evaluation
+const originalEval = window.eval;
+window.eval = function(...args) {
+  try {
+    return originalEval.apply(this, args);
+  } catch (error: any) {
+    if (error?.message?.includes('Unexpected token') && 
+        (error?.stack?.includes('webpage_content_reporter') || 
+         error?.stack?.includes('vercel'))) {
+      // Silently suppress Vercel Analytics script errors
+      return undefined;
+    }
+    throw error;
+  }
+};
 
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {

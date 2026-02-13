@@ -4,6 +4,9 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
+  "analytics": {
+    "disable": false
+  },
   "headers": [
     {
       "source": "/(.*)",

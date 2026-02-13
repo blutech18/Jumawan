@@ -28,5 +28,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Suppress Vercel Analytics script errors before they occur
+      (function() {
+        const originalError = window.onerror;
+        window.onerror = function(msg, source, lineno, colno, error) {
+          if (source && (
+            source.includes('webpage_content_reporter') ||
+            source.includes('vercel') ||
+            (msg && msg.includes('Unexpected token') && source.includes('analytics'))
+          )) {
+            return true; // Suppress error
+          }
+          if (originalError) {
+            return originalError.call(this, msg, source, lineno, colno, error);
+          }
+          return false;
+        };
+      })();
+    </script>
   </body>
 </html>
