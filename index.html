@@ -23,29 +23,55 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@alex_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Error handler must run BEFORE any scripts load to catch Vercel Analytics errors -->
     <script>
-      // Suppress Vercel Analytics script errors before they occur
       (function() {
+        // Suppress Vercel Analytics webpage_content_reporter.js errors
         const originalError = window.onerror;
         window.onerror = function(msg, source, lineno, colno, error) {
-          if (source && (
-            source.includes('webpage_content_reporter') ||
-            source.includes('vercel') ||
-            (msg && msg.includes('Unexpected token') && source.includes('analytics'))
-          )) {
+          const sourceStr = String(source || '');
+          const msgStr = String(msg || '');
+          
+          // Catch webpage_content_reporter.js errors
+          if (
+            sourceStr.includes('webpage_content_reporter') ||
+            sourceStr.includes('vercel') ||
+            (msgStr.includes('Unexpected token') && msgStr.includes('export')) ||
+            (sourceStr.includes('analytics') && msgStr.includes('Unexpected token'))
+          ) {
             return true; // Suppress error
           }
+          
           if (originalError) {
             return originalError.call(this, msg, source, lineno, colno, error);
           }
           return false;
         };
+        
+        // Also catch errors via addEventListener (more modern approach)
+        window.addEventListener('error', function(event) {
+          const filename = String(event.filename || '');
+          const message = String(event.message || '');
+          
+          if (
+            filename.includes('webpage_content_reporter') ||
+            filename.includes('vercel') ||
+            (message.includes('Unexpected token') && message.includes('export')) ||
+            (filename.includes('analytics') && message.includes('Unexpected token'))
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            return false;
+          }
+        }, true);
       })();
     </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
