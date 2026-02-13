@@ -30,6 +30,7 @@ export interface Certificate {
   image_url?: string
   description?: string
   order_index: number
+  type?: 'participation' | 'recognition'
   created_at: string
   updated_at: string
 }

@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 
-interface OptimizedImageProps {
-  src: string
-  alt: string
-  className?: string
+interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackIcon?: React.ReactNode
-  onError?: () => void
 }
 
-export const OptimizedImage = ({ 
-  src, 
-  alt, 
-  className = '', 
+export const OptimizedImage = ({
+  src,
+  alt,
+  className = '',
   fallbackIcon,
-  onError 
+  onError,
+  ...props
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -41,9 +38,9 @@ export const OptimizedImage = ({
     setIsLoaded(true)
   }
 
-  const handleError = () => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setHasError(true)
-    onError?.()
+    onError?.(e)
   }
 
   if (hasError) {
@@ -73,6 +70,7 @@ export const OptimizedImage = ({
         onLoad={handleLoad}
         onError={handleError}
         loading="lazy"
+        {...props}
       />
     </div>
   )

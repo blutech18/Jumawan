@@ -5,6 +5,7 @@ import { ArrowDown, Download, ExternalLink, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useHeroSettingsStore } from "@/stores/useHeroSettingsStore";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -14,6 +15,9 @@ export function HeroSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+
+  // Fetch dynamic hero settings
+  const { badges, resumeUrl, profileImageUrl, fetchSettings } = useHeroSettingsStore();
 
   const dynamicPhrases = [
     "Crafting exceptional digital experiences that drive business growth and user engagement.",
@@ -89,6 +93,11 @@ export function HeroSection() {
     return () => clearInterval(interval);
   }, [dynamicPhrases.length]);
 
+  // Fetch hero settings on mount
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   const scrollToProjects = () => {
     document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -97,7 +106,7 @@ export function HeroSection() {
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleDownloadCV = () => {
+  const handleDownloadCV = async () => {
     if (isDownloading) {
       toast({
         title: "Download already in progress",
@@ -114,12 +123,32 @@ export function HeroSection() {
     });
 
     try {
+      // Fetch the file as a blob to force download for cross-origin URLs
+      const response = await fetch(resumeUrl);
+      const blob = await response.blob();
+
+      // Get file extension from URL or content type
+      const urlParts = resumeUrl.split('.');
+      const extension = urlParts[urlParts.length - 1].split('?')[0] || 'png';
+
+      // Create blob URL and trigger download
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = "/Jumawan-Resume-UPDATED.png";
-      link.download = "Jumawan-Resume";
+      link.href = blobUrl;
+      link.download = `Jumawan-Resume.${extension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the resume. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setTimeout(() => {
         currentToast.dismiss();
@@ -139,7 +168,7 @@ export function HeroSection() {
 
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
+    visible: {
       opacity: 1, y: 0,
       transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const }
     }
@@ -147,7 +176,7 @@ export function HeroSection() {
 
   const fadeIn = {
     hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
+    visible: {
       opacity: 1, scale: 1,
       transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }
     }
@@ -161,23 +190,23 @@ export function HeroSection() {
     >
       {/* Background with Mesh Gradient */}
       <motion.div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-[#020617]" // Darker base background
         style={{ y: backgroundY }}
       >
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div 
-          className="absolute inset-0 opacity-30"
+        <div className="absolute inset-0 bg-gradient-hero opacity-20" /> {/* Reduced opacity of original gradient */}
+        <div
+          className="absolute inset-0 opacity-40" // Increased opacity for visibility on dark bg
           style={{
             backgroundImage: `
-              radial-gradient(at 15% 25%, hsl(202 85% 55% / 0.12) 0%, transparent 55%),
-              radial-gradient(at 85% 15%, hsl(197 100% 70% / 0.08) 0%, transparent 55%),
-              radial-gradient(at 50% 85%, hsl(227 85% 18% / 0.25) 0%, transparent 55%)
+              radial-gradient(at 15% 25%, hsl(202 85% 55% / 0.15) 0%, transparent 55%),
+              radial-gradient(at 85% 15%, hsl(197 100% 70% / 0.1) 0%, transparent 55%),
+              radial-gradient(at 50% 85%, hsl(227 85% 18% / 0.3) 0%, transparent 55%)
             `
           }}
         />
         {/* Subtle dot pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.015]"
+        <div
+          className="absolute inset-0 opacity-[0.03]" // Slightly increased visibility
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)`,
             backgroundSize: '32px 32px'
@@ -190,15 +219,7 @@ export function HeroSection() {
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{ y: floatingElementsY }}
       >
-        <motion.div
-          animate={shouldReduceMotion ? undefined : {
-            x: [0, 60, 0],
-            y: [0, -40, 0],
-          }}
-          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -left-20 w-[400px] h-[400px] rounded-full opacity-10 blur-[100px]"
-          style={{ background: 'hsl(202 85% 55%)' }}
-        />
+        {/* Upper-left glowing ball removed */}
         <motion.div
           animate={shouldReduceMotion ? undefined : {
             x: [0, -80, 0],
@@ -244,8 +265,8 @@ export function HeroSection() {
 
               {/* Role Tags - Refined pill design */}
               <motion.div variants={fadeUp} className="flex flex-wrap gap-2 sm:gap-2.5 justify-center lg:justify-start mt-5 sm:mt-6 mb-6 sm:mb-7">
-                {["BSIT Student", "Full Stack Developer", "Freelancer"].map((role) => (
-                  <span 
+                {badges.map((role) => (
+                  <span
                     key={role}
                     className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] sm:text-xs font-medium text-muted-foreground/90 bg-white/[0.03] border border-white/[0.06] hover:border-primary/20 hover:bg-white/[0.05] transition-all duration-300 cursor-default"
                   >
@@ -273,8 +294,8 @@ export function HeroSection() {
               </motion.div>
 
               {/* CTA Buttons - Enhanced sophisticated design */}
-              <motion.div 
-                variants={fadeUp} 
+              <motion.div
+                variants={fadeUp}
                 className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center w-full sm:w-auto"
                 style={{ y: buttonsY, opacity: buttonsOpacity }}
               >
@@ -299,15 +320,17 @@ export function HeroSection() {
                   <span className="relative z-10">Contact Me</span>
                 </Button>
 
-                {/* Download Resume - Icon only */}
-                <button
-                  onClick={handleDownloadCV}
-                  disabled={isDownloading}
-                  className="group flex items-center justify-center w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-primary/40 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 disabled:opacity-50"
-                  title="Download Resume"
-                >
-                  <Download className="h-[18px] w-[18px] text-foreground group-hover:text-white transition-colors duration-300" />
-                </button>
+                {/* Download Resume - Icon only (only show if resume exists) */}
+                {resumeUrl && (
+                  <button
+                    onClick={handleDownloadCV}
+                    disabled={isDownloading}
+                    className="group flex items-center justify-center w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-primary/40 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 disabled:opacity-50"
+                    title="Download Resume"
+                  >
+                    <Download className="h-[18px] w-[18px] text-foreground group-hover:text-white transition-colors duration-300" />
+                  </button>
+                )}
               </motion.div>
             </motion.div>
 
@@ -328,12 +351,16 @@ export function HeroSection() {
                 {/* Ambient glow - breathing */}
                 <motion.div
                   animate={shouldReduceMotion ? undefined : {
-                    opacity: [0.1, 0.25, 0.1],
-                    scale: [1.2, 1.4, 1.2],
+                    opacity: [0.7, 0.9, 0.7], // High opacity for strong effect
+                    scale: [1.1, 1.35, 1.1],
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-0 blur-[60px] sm:blur-[80px] rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, hsl(202 85% 55% / 0.5), hsl(260 70% 60% / 0.2), hsl(197 100% 70% / 0.3), transparent 70%)' }}
+                  className="absolute inset-0 blur-[50px] sm:blur-[70px] rounded-full pointer-events-none"
+                  style={{
+                    // Premium Blue Gradient: Electric Blue Core -> Royal Blue -> Deep Indigo -> Transparent
+                    background: 'radial-gradient(circle, hsl(210 100% 60% / 0.9), hsl(220 90% 55% / 0.7), hsl(230 80% 40% / 0.4), transparent 70%)',
+                    mixBlendMode: 'screen'
+                  }}
                 />
 
                 {/* SVG Loading Rings & Effects */}
@@ -547,7 +574,7 @@ export function HeroSection() {
                 {/* Photo - seamless against border */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden">
                   <motion.img
-                    src="/me.jpg"
+                    src={profileImageUrl}
                     alt="Cristan Jade Jumawan - Full Stack Developer"
                     className="w-full h-full object-cover rounded-full will-change-transform"
                     loading="eager"
@@ -597,7 +624,7 @@ export function HeroSection() {
       </motion.div>
 
       {/* Bottom fade gradient for smooth transition to about section */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 right-0 h-32 sm:h-48 pointer-events-none z-20"
         style={{
           background: 'linear-gradient(to bottom, transparent 0%, #030014 100%)'

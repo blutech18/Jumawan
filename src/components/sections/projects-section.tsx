@@ -179,7 +179,7 @@ export function ProjectsSection() {
   }
 
   return (
-    <section id="projects" className="py-20 bg-transparent relative overflow-hidden">
+    <section id="projects" className="py-20 bg-transparent relative overflow-hidden border-none outline-none">
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           ref={ref}
@@ -188,16 +188,14 @@ export function ProjectsSection() {
           variants={containerVariants}
           className="flex flex-col items-center mb-16 mx-auto w-fit"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+            <span className="text-cyan-400">
               Featured Projects
             </span>
           </h2>
-          <div className="flex items-center justify-center gap-3 w-full">
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
-            <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
-          </div>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center font-medium">
+            A showcase of my best work and creative solutions
+          </p>
         </motion.div>
 
         {projects.length === 0 ? (

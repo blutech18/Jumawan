@@ -48,16 +48,14 @@ export function EducationSection() {
           className="max-w-6xl mx-auto"
         >
           <motion.div variants={itemVariants} className="flex flex-col items-center mb-16 mx-auto w-fit">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+              <span className="text-cyan-400">
                 Education
               </span>
             </h2>
-            <div className="flex items-center justify-center gap-3 w-full">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
-              <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
-            </div>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center font-medium">
+              My academic background and qualifications
+            </p>
           </motion.div>
 
           {/* Card Grid - Consistent with Skills Section */}
@@ -72,7 +70,7 @@ export function EducationSection() {
                 className="transform-gpu"
                 style={{ willChange: "transform, opacity" }}
               >
-                <div className="relative h-full rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden group transition-all duration-500 hover:bg-white/[0.04] hover:border-primary/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.06)]">
+                <div className="relative h-full p-6 border border-border/50 rounded-xl transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] overflow-hidden group">
                   {/* Accent gradient top bar */}
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 

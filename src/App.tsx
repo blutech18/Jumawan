@@ -7,6 +7,8 @@ import { ReactLenis } from "lenis/react";
 import Portfolio from "./pages/Portfolio";
 import NotFound from "./pages/NotFound";
 
+import { GlobalGlow } from "@/components/ui/global-glow";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -15,10 +17,11 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <GlobalGlow />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Portfolio />} />
-            
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

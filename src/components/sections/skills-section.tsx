@@ -44,16 +44,14 @@ export function SkillsSection() {
           {/* Header - Centered to match Certificates */}
           <motion.div variants={itemVariants} className="flex flex-col items-center mb-16 mx-auto w-fit"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+              <span className="text-cyan-400">
                 My Skills
               </span>
             </h2>
-            <div className="flex items-center justify-center gap-3 w-full">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
-              <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
-            </div>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center font-medium">
+              A comprehensive overview of my technical expertise and proficiency
+            </p>
           </motion.div>
 
           {/* Skills Grid - Minimalist Layout */}
@@ -91,7 +89,7 @@ export function SkillsSection() {
           {/* Bottom CTA */}
           <motion.div
             variants={itemVariants}
-            className="mt-20 pt-10 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-6"
+            className="mt-20 flex flex-col sm:flex-row items-center justify-between gap-6"
           >
             <p className="text-muted-foreground text-lg">
               Ready to deploy these technologies on your next project?

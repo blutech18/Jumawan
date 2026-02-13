@@ -146,24 +146,24 @@ export function Navigation() {
             ))}
 
             {/* Social Icons */}
-            <div className="flex items-center space-x-2 ml-2 border-l border-white/10 pl-6">
+            <div className="flex items-center space-x-4 ml-2 border-l border-white/10 pl-6">
               <a
                 href="https://github.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/10 text-foreground/70 hover:text-primary transition-all duration-300"
+                className="text-foreground/70 hover:text-primary transition-colors duration-300"
               >
-                <Github className="h-4 w-4" />
+                <Github className="h-5 w-5" />
               </a>
               <a
                 href="https://www.linkedin.com/in/cristan-jade-jumawan-45b27b39b"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/10 text-foreground/70 hover:text-primary transition-all duration-300"
+                className="text-foreground/70 hover:text-primary transition-colors duration-300"
               >
-                <Linkedin className="h-4 w-4" />
+                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>

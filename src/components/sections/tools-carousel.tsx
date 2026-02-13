@@ -1,44 +1,24 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring, MotionValue, useMotionValue, useAnimationFrame, useMotionTemplate } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
+// --- Types ---
+interface Tool {
+  id: string;
+  name: string;
+  icon_url: string;
+  category: string;
+  ring: 'inner' | 'outer';
+  order_index: number;
+  is_active: boolean;
+}
 
-// --- Tool Data Groups ---
-
-// Inner Ring: Core Essentials (High frequency use)
-const innerRingTools = [
-  { name: "Visual Studio Code", image: "/vscode.png" },
-  { name: "Cursor", image: "/cursor.png" },
-  { name: "Git", image: "/github.png" }, // Using github icon for git broadly
-  { name: "Visual Studio", image: "/visualstudio.png" },
-];
-
-// Middle Ring: Frameworks, Backend, Deployment (The "Planets")
-const middleRingTools = [
-  { name: "Firebase", image: "/firebase.png" },
-  { name: "Supabase", image: "/supabase.png" },
-  { name: "Vercel", image: "/vercel.png" },
-  { name: "Netlify", image: "/netlify.png" },
-  { name: "XAMPP", image: "/xampp.png" },
-  { name: "Android Studio", image: "/androidstudio.png" },
-  { name: "GitLab", image: "/gitlab.png" },
-  { name: "Railway", image: "/railway.png" },
-];
-
-// Outer Ring: AI, Design, Specialized (The "Outer Rim")
-const outerRingTools = [
-  { name: "ChatGPT", image: "/chatgpt.png" },
-  { name: "Claude", image: "/claude.png" },
-  { name: "Gemini", image: "/gemini.png" },
-  { name: "DeepSeek", image: "/deepseek.png" },
-  { name: "Windsurf", image: "/windsurf.png" },
-  { name: "AugmentCode", image: "/augmentcode.png" },
-  { name: "Canva", image: "/canva.png" },
-  { name: "Packet Tracer", image: "/packettracer.png" },
-  { name: "LaTeX", image: "/latexcode.png" },
-  { name: "Kimik2", image: "/kimik2.png" },
-];
+interface DisplayTool {
+  name: string;
+  image: string;
+}
 
 // --- Components ---
 
@@ -85,7 +65,7 @@ const PlanetNode = ({
   baseAngle, // The starting angle offset for this specific planet
   rotationValue, // The MotionValue driving the ring's rotation
 }: {
-  tool: { name: string; image: string };
+  tool: DisplayTool;
   radius: number;
   baseAngle: number;
   rotationValue: MotionValue<number>;
@@ -100,7 +80,7 @@ const PlanetNode = ({
 
   return (
     <motion.div
-      className="absolute top-1/2 left-1/2"
+      className="absolute top-1/2 left-1/2 pointer-events-none"
       style={{
         width: radius * 2,
         height: radius * 2,
@@ -122,29 +102,29 @@ const PlanetNode = ({
         {/* Counter-rotation Wrapper - Keeps icon upright */}
         <motion.div
           style={{ rotate: counterRotate }}
-          className="relative group"
+          className="relative group pointer-events-auto"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Icon Circle */}
+          {/* Icon Circle - Container Removed, Scaled Down 10% */}
           <div className={`
-             relative flex items-center justify-center rounded-full
+             relative flex items-center justify-center scale-90
              ${radius < 100 ? "w-8 h-8 sm:w-10 sm:h-10" : "w-10 h-10 sm:w-12 sm:h-12"}
           `}>
-            <img
-              src={tool.image}
-              alt={tool.name}
-              className={`object-contain
-                ${radius < 100 ? "w-6 h-6 sm:w-8 sm:h-8" : "w-8 h-8 sm:w-10 sm:h-10"}
-              `}
-            />
+            <div className="w-full h-full flex items-center justify-center">
+              <img
+                src={tool.image}
+                alt={tool.name}
+                className="w-full h-full object-contain drop-shadow-lg"
+              />
+            </div>
           </div>
 
           {/* Tooltip */}
           <div className={`
             absolute left-1/2 -translate-x-1/2 top-full mt-2
-            px-2 py-1 bg-navy-950/90 border border-blue-500/20 rounded
-            text-[10px] sm:text-xs text-blue-100 whitespace-nowrap pointer-events-none
+            px-2 py-1 bg-black/90 border border-cyan-500/30 rounded
+            text-[10px] sm:text-xs text-cyan-50 whitespace-nowrap pointer-events-none
             opacity-0 transform translate-y-2 transition-all duration-200
             ${isHovered ? "opacity-100 translate-y-0" : ""}
           `}>
@@ -158,6 +138,57 @@ const PlanetNode = ({
 
 export function ToolsCarousel() {
   const containerRef = useRef<HTMLElement>(null);
+  const [innerRing, setInnerRing] = useState<DisplayTool[]>([]);
+  const [middleRing, setMiddleRing] = useState<DisplayTool[]>([]);
+  const [outerRing, setOuterRing] = useState<DisplayTool[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch tools from Supabase
+  useEffect(() => {
+    const fetchTools = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tools')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true }); // Prefer explicitly ordered tools
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {            // Transform data for display and Deduplicate by name
+          const uniqueToolsMap = new Map();
+          data.forEach((t: Tool) => {
+            if (!uniqueToolsMap.has(t.name)) {
+              uniqueToolsMap.set(t.name, {
+                name: t.name,
+                image: t.icon_url
+              });
+            }
+          });
+          const allTools = Array.from(uniqueToolsMap.values());
+
+          // Smart Distrubution Logic (Automatic 3-Ring Split)
+          // Goal: ~20% Inner, ~35% Middle, ~45% Outer
+          const total = allTools.length;
+          const innerCount = Math.max(3, Math.floor(total * 0.2));
+          const middleCount = Math.max(5, Math.floor(total * 0.35));
+          // Remaining goes to outer
+
+          setInnerRing(allTools.slice(0, innerCount));
+          setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
+          setOuterRing(allTools.slice(innerCount + middleCount));
+        }
+      } catch (err) {
+        console.error("Error fetching tools:", err);
+        // Fallback or empty state could go here, but leaving empty is fine as per requirements
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTools();
+  }, []);
+
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -199,7 +230,7 @@ export function ToolsCarousel() {
     ([base, scroll]) => {
       // Base speed: 1x
       // Scroll influence: 0 -> 360 (1 full rotation over the scroll distance)
-      return (base * 3) + (scroll * 360);
+      return ((base as number) * 3) + ((scroll as number) * 360);
     }
   );
 
@@ -209,7 +240,7 @@ export function ToolsCarousel() {
     ([base, scroll]) => {
       // Base speed: -0.8x
       // Scroll influence: 30 -> -330 (Counter rotation)
-      return (base * -2) + (30 + scroll * -360);
+      return ((base as number) * -2) + (30 + (scroll as number) * -360);
     }
   );
 
@@ -219,7 +250,7 @@ export function ToolsCarousel() {
     ([base, scroll]) => {
       // Base speed: 0.5x
       // Scroll influence: 0 -> 180 (Slower scroll rotation)
-      return (base * 1) + (scroll * 180);
+      return ((base as number) * 1) + ((scroll as number) * 180);
     }
   );
 
@@ -265,14 +296,12 @@ export function ToolsCarousel() {
         {/* Header */}
         <div className="text-center mb-28 sm:mb-36">
           <div className="flex flex-col items-center mx-auto w-fit">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-6 text-center">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-cyan-400 mb-4 text-center">
               Tools & Technologies
             </h2>
-            <div className="flex items-center justify-center gap-3 w-full">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
-              <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
-            </div>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center font-medium">
+              The technologies and tools I use to build exceptional digital experiences
+            </p>
           </div>
         </div>
 
@@ -337,11 +366,21 @@ export function ToolsCarousel() {
 
           {/* --- ORBITS --- */}
 
+          {/* 
+            Background Ring Sizing Math:
+            Radii: Inner=160, Middle=260, Outer=360
+            Dia (Unscaled): 320, 520, 720
+
+            Mobile (Scale 0.5): 160, 260, 360
+            Tablet (Scale 0.75): 240, 390, 540
+            Desktop (Scale 1): 320, 520, 720
+          */}
+
           {/* Base Rings (Always visible, faint) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="absolute rounded-full border border-blue-500/10 w-[160px] h-[160px] sm:w-[260px] sm:h-[260px] md:w-[320px] md:h-[320px]" />
-            <div className="absolute rounded-full border border-blue-500/10 w-[280px] h-[280px] sm:w-[420px] sm:h-[420px] md:w-[520px] md:h-[520px]" />
-            <div className="absolute rounded-full border border-blue-500/10 w-[400px] h-[400px] sm:w-[580px] sm:h-[580px] md:w-[720px] md:h-[720px]" />
+            <div className="absolute rounded-full border border-blue-500/10 w-[160px] h-[160px] sm:w-[240px] sm:h-[240px] md:w-[320px] md:h-[320px]" />
+            <div className="absolute rounded-full border border-blue-500/10 w-[260px] h-[260px] sm:w-[390px] sm:h-[390px] md:w-[520px] md:h-[520px]" />
+            <div className="absolute rounded-full border border-blue-500/10 w-[360px] h-[360px] sm:w-[540px] sm:h-[540px] md:w-[720px] md:h-[720px]" />
           </div>
 
           {/* Highlight Rings (Visible only under flashlight) */}
@@ -352,45 +391,45 @@ export function ToolsCarousel() {
               WebkitMaskImage: useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, black, transparent)`,
             }}
           >
-            <div className="absolute rounded-full border border-blue-400/60 w-[160px] h-[160px] sm:w-[260px] sm:h-[260px] md:w-[320px] md:h-[320px]" />
-            <div className="absolute rounded-full border border-blue-400/60 w-[280px] h-[280px] sm:w-[420px] sm:h-[420px] md:w-[520px] md:h-[520px]" />
-            <div className="absolute rounded-full border border-blue-400/60 w-[400px] h-[400px] sm:w-[580px] sm:h-[580px] md:w-[720px] md:h-[720px]" />
+            <div className="absolute rounded-full border border-cyan-400/60 w-[160px] h-[160px] sm:w-[240px] sm:h-[240px] md:w-[320px] md:h-[320px]" />
+            <div className="absolute rounded-full border border-cyan-400/60 w-[260px] h-[260px] sm:w-[390px] sm:h-[390px] md:w-[520px] md:h-[520px]" />
+            <div className="absolute rounded-full border border-cyan-400/60 w-[360px] h-[360px] sm:w-[540px] sm:h-[540px] md:w-[720px] md:h-[720px]" />
           </motion.div>
 
 
           {/* --- PLANETS --- */}
 
-          <div className="absolute inset-0 scale-[0.45] sm:scale-[0.7] md:scale-100 origin-center pointer-events-none">
-            <div className="absolute inset-0 pointer-events-auto">
+          <div className="absolute inset-0 scale-[0.5] sm:scale-[0.75] md:scale-100 origin-center pointer-events-none">
+            <div className="absolute inset-0 pointer-events-auto z-30">
               {/* Inner Ring - Base Radius 160 */}
-              {innerRingTools.map((tool, i) => (
+              {innerRing.map((tool, i) => (
                 <PlanetNode
                   key={tool.name}
                   tool={tool}
                   radius={160}
-                  baseAngle={(360 / innerRingTools.length) * i}
+                  baseAngle={(360 / innerRing.length) * i}
                   rotationValue={innerRotate}
                 />
               ))}
 
               {/* Middle Ring - Base Radius 260 */}
-              {middleRingTools.map((tool, i) => (
+              {middleRing.map((tool, i) => (
                 <PlanetNode
                   key={tool.name}
                   tool={tool}
                   radius={260}
-                  baseAngle={(360 / middleRingTools.length) * i}
+                  baseAngle={(360 / middleRing.length) * i}
                   rotationValue={middleRotate}
                 />
               ))}
 
               {/* Outer Ring - Base Radius 360 */}
-              {outerRingTools.map((tool, i) => (
+              {outerRing.map((tool, i) => (
                 <PlanetNode
                   key={tool.name}
                   tool={tool}
                   radius={360}
-                  baseAngle={(360 / outerRingTools.length) * i}
+                  baseAngle={(360 / outerRing.length) * i}
                   rotationValue={outerRotate}
                 />
               ))}

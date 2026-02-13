@@ -84,11 +84,29 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html,
   body {
     @apply bg-background text-foreground overflow-x-hidden select-none;
     /* select-none disables selection */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Hide scrollbar globally */
+    scrollbar-width: none !important;
+    /* Firefox */
+    -ms-overflow-style: none !important;
+    /* IE/Edge */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none !important;
+    /* Chrome/Safari/Opera */
+  }
+
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   /* Ensure inputs are still selectable if needed */
@@ -96,6 +114,19 @@ All colors MUST be HSL.
   textarea {
     @apply select-text;
   }
+}
+
+/* Scrollbar-hide utility for any element */
+.scrollbar-hide {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari/Opera */
 }
 
 @layer utilities {

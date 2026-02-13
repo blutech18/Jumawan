@@ -6,9 +6,9 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-navy-800 text-muted-foreground border-t border-white/10">
+    <footer className="relative bg-[#021021]/80 backdrop-blur-md shadow-lg text-muted-foreground border-t border-white/10">
       {/* top accent line */}
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
 
       <div className="container mx-auto px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -18,40 +18,40 @@ export function Footer() {
               <img
                 src="/cjj%20logo.png"
                 alt="CJJ logo"
-                className="h-8 w-auto select-none"
+                className="h-10 w-auto select-none"
                 draggable={false}
               />
-              <span className="text-foreground font-semibold">Jumawan Portfolio</span>
+              <span className="text-lg font-bold text-cyan-400">Jumawan Portfolio</span>
             </div>
             <p className="mt-4 text-sm leading-6">
               Crafting clean, performant web experiences with modern tools and thoughtful design.
             </p>
 
-            <div className="mt-5 flex items-center justify-center md:justify-start gap-3">
+            <div className="mt-6 flex items-center justify-center md:justify-start gap-5">
               <a
                 href="https://github.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors"
+                className="text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                <Github className="h-4 w-4" />
+                <Github className="h-5 w-5" />
               </a>
               <a
                 href="https://www.linkedin.com/in/cristan-jade-jumawan-45b27b39b"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors"
+                className="text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                <Linkedin className="h-4 w-4" />
+                <Linkedin className="h-5 w-5" />
               </a>
               <a
-                href="mailto:alex@example.com"
+                href="mailto:cristanjade14@gmail.com"
                 aria-label="Email"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-foreground transition-colors"
+                className="text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-5 w-5" />
               </a>
             </div>
 
@@ -67,57 +67,63 @@ export function Footer() {
 
           {/* Quick Links */}
           <div className="text-center md:text-left">
-            <p className="text-foreground font-medium">Quick Links</p>
-            <ul className="mt-4 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
+            <p className="text-cyan-400 font-semibold tracking-wide">Quick Links</p>
+            <ul className="mt-6 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
               <li>
-                <a href="#home" className="hover:text-foreground transition-colors">Home</a>
+                <a href="#home" className="hover:text-cyan-400 transition-colors">Home</a>
               </li>
               <li>
-                <a href="#about" className="hover:text-foreground transition-colors">About</a>
+                <a href="#about" className="hover:text-cyan-400 transition-colors">About</a>
               </li>
               <li>
-                <a href="#skills" className="hover:text-foreground transition-colors">Skills</a>
+                <a href="#skills" className="hover:text-cyan-400 transition-colors">Skills</a>
               </li>
               <li>
-                <a href="#projects" className="hover:text-foreground transition-colors">Projects</a>
+                <a href="#projects" className="hover:text-cyan-400 transition-colors">Projects</a>
               </li>
               <li>
-                <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
+                <a href="#contact" className="hover:text-cyan-400 transition-colors">Contact</a>
               </li>
             </ul>
           </div>
 
           {/* Resources */}
           <div className="text-center md:text-left">
-            <p className="text-foreground font-medium">Resources</p>
-            <ul className="mt-4 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
+            <p className="text-cyan-400 font-semibold tracking-wide">Resources</p>
+            <ul className="mt-6 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
               <li>
-                <a href="#privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+                <a href="#privacy" className="hover:text-cyan-400 transition-colors">Privacy Policy</a>
               </li>
               <li>
-                <a href="#terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+                <a href="#terms" className="hover:text-cyan-400 transition-colors">Terms of Service</a>
               </li>
               <li>
-                <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+                <a href="#faq" className="hover:text-cyan-400 transition-colors">FAQ</a>
               </li>
               <li>
-                <a href="#support" className="hover:text-foreground transition-colors">Support</a>
+                <a href="#support" className="hover:text-cyan-400 transition-colors">Support</a>
               </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div className="text-center md:text-left">
-            <p className="text-foreground font-medium">Contact</p>
-            <ul className="mt-4 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
+            <p className="text-cyan-400 font-semibold tracking-wide">Contact</p>
+            <ul className="mt-6 flex flex-col items-center md:items-start space-y-3 text-sm">
               <li>
-                <a href="mailto:alex@example.com" className="hover:text-foreground transition-colors">alex@example.com</a>
+                <a href="mailto:cristanjade14@gmail.com" className="hover:text-cyan-400 transition-colors">cristanjade14@gmail.com</a>
               </li>
-              <li className="text-foreground/80">Open to freelance and collabs</li>
+              <li>
+                <a href="tel:+639617110582" className="hover:text-cyan-400 transition-colors">+63 961 711 0582</a>
+              </li>
+              <li className="text-foreground/80 max-w-[200px] md:max-w-none mx-auto md:mx-0">
+                Zone 2-A Looc, Igpit Opol Misamis Oriental
+              </li>
+              <li className="text-cyan-400/80 pt-2 font-medium">Open to freelance and collabs</li>
             </ul>
           </div>
 
-          
+
         </div>
 
         {/* bottom bar */}
@@ -128,7 +134,7 @@ export function Footer() {
             type="button"
             aria-label="Back to top"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="inline-flex items-center gap-2 text-xs md:text-sm text-foreground/80 hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-xs md:text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
           >
             <ArrowUp className="h-4 w-4" />
             Back to top
