@@ -24,9 +24,71 @@
     <meta name="twitter:site" content="@alex_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- Error handler must run BEFORE any scripts load to catch Vercel Analytics errors -->
+    <!-- Block Vercel Analytics script injection and suppress errors -->
     <script>
       (function() {
+        // Block webpage_content_reporter.js script from loading
+        const originalAppendChild = Node.prototype.appendChild;
+        const originalInsertBefore = Node.prototype.insertBefore;
+        const originalCreateElement = Document.prototype.createElement;
+        
+        // Intercept script creation
+        Document.prototype.createElement = function(tagName, options) {
+          const element = originalCreateElement.call(this, tagName, options);
+          
+          if (tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            const originalSetAttributeNS = element.setAttributeNS;
+            
+            element.setAttribute = function(name, value) {
+              if (name === 'src' && (
+                String(value).includes('webpage_content_reporter') ||
+                String(value).includes('vercel') && String(value).includes('analytics')
+              )) {
+                // Block the script from loading
+                return;
+              }
+              return originalSetAttribute.call(this, name, value);
+            };
+            
+            element.setAttributeNS = function(namespace, name, value) {
+              if (name === 'src' && (
+                String(value).includes('webpage_content_reporter') ||
+                String(value).includes('vercel') && String(value).includes('analytics')
+              )) {
+                // Block the script from loading
+                return;
+              }
+              return originalSetAttributeNS.call(this, namespace, name, value);
+            };
+          }
+          
+          return element;
+        };
+        
+        // Intercept script insertion
+        Node.prototype.appendChild = function(child) {
+          if (child && child.tagName === 'SCRIPT' && child.src && (
+            child.src.includes('webpage_content_reporter') ||
+            (child.src.includes('vercel') && child.src.includes('analytics'))
+          )) {
+            // Block the script
+            return child;
+          }
+          return originalAppendChild.call(this, child);
+        };
+        
+        Node.prototype.insertBefore = function(newNode, referenceNode) {
+          if (newNode && newNode.tagName === 'SCRIPT' && newNode.src && (
+            newNode.src.includes('webpage_content_reporter') ||
+            (newNode.src.includes('vercel') && newNode.src.includes('analytics'))
+          )) {
+            // Block the script
+            return newNode;
+          }
+          return originalInsertBefore.call(this, newNode, referenceNode);
+        };
+        
         // Suppress Vercel Analytics webpage_content_reporter.js errors
         const originalError = window.onerror;
         window.onerror = function(msg, source, lineno, colno, error) {
@@ -36,8 +98,8 @@
           // Catch webpage_content_reporter.js errors
           if (
             sourceStr.includes('webpage_content_reporter') ||
-            sourceStr.includes('vercel') ||
-            (msgStr.includes('Unexpected token') && msgStr.includes('export')) ||
+            (sourceStr.includes('vercel') && msgStr.includes('Unexpected token')) ||
+            (msgStr.includes('Unexpected token') && msgStr.includes('export') && sourceStr.includes('vercel')) ||
             (sourceStr.includes('analytics') && msgStr.includes('Unexpected token'))
           ) {
             return true; // Suppress error
@@ -56,8 +118,8 @@
           
           if (
             filename.includes('webpage_content_reporter') ||
-            filename.includes('vercel') ||
-            (message.includes('Unexpected token') && message.includes('export')) ||
+            (filename.includes('vercel') && message.includes('Unexpected token')) ||
+            (message.includes('Unexpected token') && message.includes('export') && filename.includes('vercel')) ||
             (filename.includes('analytics') && message.includes('Unexpected token'))
           ) {
             event.preventDefault();
