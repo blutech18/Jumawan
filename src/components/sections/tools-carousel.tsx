@@ -180,7 +180,15 @@ export function ToolsCarousel() {
         }
       } catch (err) {
         console.error("Error fetching tools:", err);
-        // Fallback or empty state could go here, but leaving empty is fine as per requirements
+        const errorMessage = (err as Error)?.message || 'Unknown error';
+        const isNetworkError = errorMessage.includes('Failed to fetch') || 
+                              errorMessage.includes('ERR_NAME_NOT_RESOLVED') ||
+                              errorMessage.includes('NetworkError');
+        // Silently handle network errors - don't show to user
+        if (!isNetworkError) {
+          console.warn('Non-network error fetching tools:', err);
+        }
+        // Leave empty state - component will handle gracefully
       } finally {
         setLoading(false);
       }

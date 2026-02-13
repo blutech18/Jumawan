@@ -25,7 +25,12 @@ export const useProjectStore = create<ProjectState>((set) => ({
       set({ projects: data || [] });
     } catch (error) {
       console.error('Error fetching projects:', error);
-      set({ error: (error as Error).message || 'An unknown error occurred' });
+      const errorMessage = (error as Error).message || 'An unknown error occurred';
+      const isNetworkError = errorMessage.includes('Failed to fetch') || 
+                            errorMessage.includes('ERR_NAME_NOT_RESOLVED') ||
+                            errorMessage.includes('NetworkError');
+      // Don't show network errors to users, just log them
+      set({ error: isNetworkError ? null : errorMessage });
     } finally {
       set({ loading: false });
     }

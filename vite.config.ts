@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
+        format: 'es',
         manualChunks: {
           // Vendor chunks for large dependencies
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],

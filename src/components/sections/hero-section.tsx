@@ -15,6 +15,7 @@ export function HeroSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   // Fetch dynamic hero settings
   const { badges, resumeUrl, profileImageUrl, fetchSettings } = useHeroSettingsStore();
@@ -573,14 +574,21 @@ export function HeroSection() {
 
                 {/* Photo - seamless against border */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden">
-                  <motion.img
-                    src={profileImageUrl}
-                    alt="Cristan Jade Jumawan - Full Stack Developer"
-                    className="w-full h-full object-cover rounded-full will-change-transform"
-                    loading="eager"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  />
+                  {imageError ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5 rounded-full">
+                      <div className="text-4xl font-bold text-primary/60">CJ</div>
+                    </div>
+                  ) : (
+                    <motion.img
+                      src={profileImageUrl}
+                      alt="Cristan Jade Jumawan - Full Stack Developer"
+                      className="w-full h-full object-cover rounded-full will-change-transform"
+                      loading="eager"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      onError={() => setImageError(true)}
+                    />
+                  )}
                 </div>
 
                 {/* Breathing outer glow */}

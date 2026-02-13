@@ -23,7 +23,7 @@ interface HeroSettingsState {
 export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
     badges: [],
     resumeUrl: '/Jumawan-Resume-UPDATED.png', // Default fallback
-    profileImageUrl: '/me.jpg', // Default fallback
+    profileImageUrl: '/placeholder.svg', // Default fallback - use placeholder instead of non-existent me.jpg
     loading: false,
     error: null,
 
@@ -39,8 +39,14 @@ export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
 
             if (error) {
                 console.error('Error fetching hero settings:', error);
-                // Keep default values on error
-                set({ loading: false, error: error.message });
+                // Keep default values on error - don't show error to user for network issues
+                const isNetworkError = error.message?.includes('Failed to fetch') || 
+                                      error.message?.includes('ERR_NAME_NOT_RESOLVED') ||
+                                      error.message?.includes('NetworkError');
+                set({ 
+                    loading: false, 
+                    error: isNetworkError ? null : error.message // Only set error for non-network issues
+                });
                 return;
             }
 
@@ -54,7 +60,7 @@ export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
 
             const profileImage = data?.find((item: HeroSetting) => item.type === 'profile_image');
             // Use actual value (even if empty) when profile_image exists, only fallback when no record
-            const profileImageUrl = profileImage ? profileImage.value : '/me.jpg';
+            const profileImageUrl = profileImage && profileImage.value ? profileImage.value : '/placeholder.svg';
 
             set({
                 badges: badgeValues.length > 0 ? badgeValues : ['BSIT Student', 'Full Stack Developer', 'Freelancer'],
