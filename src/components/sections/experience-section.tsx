@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Briefcase, Calendar, MapPin, ArrowRight, Globe, Clock, Star, Code } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { supabase, WorkExperience } from "@/lib/supabase";
+import { WorkExperience } from "@/lib/supabase";
+import { safeSupabase } from "@/lib/supabase-safe";
 import { useExperienceStore } from "@/stores/useExperienceStore";
 import {
   Dialog,
@@ -30,8 +31,9 @@ export function ExperienceSection() {
   }, [fetchExperiences]);
 
   const trackPageView = async () => {
+    if (!safeSupabase.isAvailable()) return;
     try {
-      await supabase
+      await safeSupabase.client!
         .from('analytics')
         .insert([{
           event_type: 'page_view',
@@ -39,7 +41,8 @@ export function ExperienceSection() {
           event_data: { section: 'experience' }
         }]);
     } catch (error) {
-      console.error('Analytics tracking error:', error);
+      // Silently fail analytics - don't break the app
+      console.warn('Analytics tracking error:', error);
     }
   };
 

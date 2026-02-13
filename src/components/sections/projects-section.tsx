@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { supabase, Project } from "@/lib/supabase";
+import { Project } from "@/lib/supabase";
+import { safeSupabase } from "@/lib/supabase-safe";
 import { useProjectStore } from "@/stores/useProjectStore";
 
 export function ProjectsSection() {
@@ -33,8 +34,9 @@ export function ProjectsSection() {
   }, [fetchProjects]);
 
   const trackPageView = async () => {
+    if (!safeSupabase.isAvailable()) return;
     try {
-      await supabase
+      await safeSupabase.client!
         .from('analytics')
         .insert([{
           event_type: 'page_view',
@@ -42,7 +44,8 @@ export function ProjectsSection() {
           event_data: { section: 'projects' }
         }]);
     } catch (error) {
-      console.error('Analytics tracking error:', error);
+      // Silently fail analytics - don't break the app
+      console.warn('Analytics tracking error:', error);
     }
   };
 

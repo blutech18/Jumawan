@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '@/lib/supabase';
+import { safeSupabase } from '@/lib/supabase-safe';
 
 interface ContactFormData {
   name: string;
@@ -21,8 +21,15 @@ export const useContactStore = create<ContactState>((set) => ({
   resetStatus: () => set({ submitStatus: 'idle' }),
   submitMessage: async (formData: ContactFormData) => {
     set({ isSubmitting: true, submitStatus: 'idle' });
+    
+    if (!safeSupabase.isAvailable()) {
+      console.warn('Supabase not available, cannot submit form');
+      set({ submitStatus: 'error', isSubmitting: false });
+      return false;
+    }
+
     try {
-      const { error } = await supabase
+      const { error } = await safeSupabase.client!
         .from('contact_messages')
         .insert([{
           name: formData.name,
@@ -34,23 +41,26 @@ export const useContactStore = create<ContactState>((set) => ({
 
       if (error) throw error;
       
-      // Also track analytics
-      await supabase
-        .from('analytics')
-        .insert([{
-          event_type: 'contact_form_submission',
-          page_url: '/contact',
-          event_data: { subject: formData.subject }
-        }]);
+      // Also track analytics (non-blocking, don't fail if this fails)
+      try {
+        await safeSupabase.client!
+          .from('analytics')
+          .insert([{
+            event_type: 'contact_form_submission',
+            page_url: '/contact',
+            event_data: { subject: formData.subject }
+          }]);
+      } catch (analyticsError) {
+        // Analytics failure shouldn't block form submission
+        console.warn('Failed to track analytics:', analyticsError);
+      }
 
-      set({ submitStatus: 'success' });
+      set({ submitStatus: 'success', isSubmitting: false });
       return true;
     } catch (error) {
       console.error('Error submitting form:', error);
-      set({ submitStatus: 'error' });
+      set({ submitStatus: 'error', isSubmitting: false });
       return false;
-    } finally {
-      set({ isSubmitting: false });
     }
   },
 }));

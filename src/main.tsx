@@ -11,18 +11,36 @@ window.addEventListener('error', (event) => {
     event.filename.includes('analytics')
   )) {
     event.preventDefault();
-    console.warn('Suppressed script error:', event.filename);
+    return false;
+  }
+  
+  // Suppress WebSocket connection errors from Supabase
+  if (event.message && (
+    event.message.includes('WebSocket') ||
+    event.message.includes('websocket') ||
+    event.message.includes('wss://') ||
+    event.message.includes('realtime')
+  )) {
+    event.preventDefault();
     return false;
   }
 }, true);
 
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const message = reason?.message || reason?.toString() || '';
+  
   // Suppress network errors from Supabase when offline/unreachable
-  if (event.reason?.message?.includes('Failed to fetch') ||
-      event.reason?.message?.includes('ERR_NAME_NOT_RESOLVED')) {
+  if (
+    message.includes('Failed to fetch') ||
+    message.includes('ERR_NAME_NOT_RESOLVED') ||
+    message.includes('NetworkError') ||
+    message.includes('WebSocket') ||
+    message.includes('websocket') ||
+    message.includes('realtime')
+  ) {
     event.preventDefault();
-    console.warn('Suppressed network error:', event.reason);
     return false;
   }
 });

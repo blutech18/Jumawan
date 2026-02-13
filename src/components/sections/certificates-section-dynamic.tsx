@@ -16,7 +16,8 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Award, Calendar, ExternalLink, X, Download, BadgeCheck, Building2, Trophy, Medal } from "lucide-react";
-import { supabase, Certificate } from "@/lib/supabase";
+import { Certificate } from "@/lib/supabase";
+import { safeSupabase } from "@/lib/supabase-safe";
 import { useCertificateStore } from "@/stores/useCertificateStore";
 
 export function CertificatesSection() {
@@ -39,8 +40,9 @@ export function CertificatesSection() {
   }, [fetchCertificates, subscribeToChanges]);
 
   const trackPageView = async () => {
+    if (!safeSupabase.isAvailable()) return;
     try {
-      await supabase
+      await safeSupabase.client!
         .from('analytics')
         .insert([{
           event_type: 'page_view',
@@ -48,7 +50,8 @@ export function CertificatesSection() {
           event_data: { section: 'certificates' }
         }]);
     } catch (error) {
-      console.error('Analytics tracking error:', error);
+      // Silently fail analytics - don't break the app
+      console.warn('Analytics tracking error:', error);
     }
   };
 

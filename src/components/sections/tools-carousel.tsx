@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring, MotionValue, useMotionValue, useAnimationFrame, useMotionTemplate } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { safeSupabase } from "@/lib/supabase-safe";
 
 // --- Types ---
 interface Tool {
@@ -146,52 +146,43 @@ export function ToolsCarousel() {
   // Fetch tools from Supabase
   useEffect(() => {
     const fetchTools = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('tools')
-          .select('*')
-          .eq('is_active', true)
-          .order('order_index', { ascending: true }); // Prefer explicitly ordered tools
+      const { data } = await safeSupabase.safeQuery<Tool[]>(
+        async (client) => {
+          return await client
+            .from('tools')
+            .select('*')
+            .eq('is_active', true)
+            .order('order_index', { ascending: true });
+        },
+        [] // Fallback to empty array
+      );
 
-        if (error) throw error;
+      if (data && data.length > 0) {
+        // Transform data for display and Deduplicate by name
+        const uniqueToolsMap = new Map();
+        data.forEach((t: Tool) => {
+          if (!uniqueToolsMap.has(t.name)) {
+            uniqueToolsMap.set(t.name, {
+              name: t.name,
+              image: t.icon_url
+            });
+          }
+        });
+        const allTools = Array.from(uniqueToolsMap.values());
 
-        if (data && data.length > 0) {            // Transform data for display and Deduplicate by name
-          const uniqueToolsMap = new Map();
-          data.forEach((t: Tool) => {
-            if (!uniqueToolsMap.has(t.name)) {
-              uniqueToolsMap.set(t.name, {
-                name: t.name,
-                image: t.icon_url
-              });
-            }
-          });
-          const allTools = Array.from(uniqueToolsMap.values());
+        // Smart Distribution Logic (Automatic 3-Ring Split)
+        // Goal: ~20% Inner, ~35% Middle, ~45% Outer
+        const total = allTools.length;
+        const innerCount = Math.max(3, Math.floor(total * 0.2));
+        const middleCount = Math.max(5, Math.floor(total * 0.35));
+        // Remaining goes to outer
 
-          // Smart Distrubution Logic (Automatic 3-Ring Split)
-          // Goal: ~20% Inner, ~35% Middle, ~45% Outer
-          const total = allTools.length;
-          const innerCount = Math.max(3, Math.floor(total * 0.2));
-          const middleCount = Math.max(5, Math.floor(total * 0.35));
-          // Remaining goes to outer
-
-          setInnerRing(allTools.slice(0, innerCount));
-          setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
-          setOuterRing(allTools.slice(innerCount + middleCount));
-        }
-      } catch (err) {
-        console.error("Error fetching tools:", err);
-        const errorMessage = (err as Error)?.message || 'Unknown error';
-        const isNetworkError = errorMessage.includes('Failed to fetch') || 
-                              errorMessage.includes('ERR_NAME_NOT_RESOLVED') ||
-                              errorMessage.includes('NetworkError');
-        // Silently handle network errors - don't show to user
-        if (!isNetworkError) {
-          console.warn('Non-network error fetching tools:', err);
-        }
-        // Leave empty state - component will handle gracefully
-      } finally {
-        setLoading(false);
+        setInnerRing(allTools.slice(0, innerCount));
+        setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
+        setOuterRing(allTools.slice(innerCount + middleCount));
       }
+      
+      setLoading(false);
     };
 
     fetchTools();

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+// Supabase import removed - using useContactStore instead
 
 interface FormData {
   name: string;
