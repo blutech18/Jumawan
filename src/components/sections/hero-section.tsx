@@ -1,11 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform, useSpring } from "framer-motion";
 import { ArrowDown, Download, ExternalLink, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useHeroSettingsStore } from "@/stores/useHeroSettingsStore";
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -28,6 +29,7 @@ export function HeroSection() {
     "Passionate about creating seamless experiences across web and mobile platforms.",
   ];
   const { toast } = useToast();
+  const { scrollToSection } = useSmoothScroll();
 
   // Parallax effect
   const sectionRef = useRef<HTMLElement>(null);
@@ -36,16 +38,20 @@ export function HeroSection() {
     offset: ["start start", "end start"]
   });
 
-  // Scroll-based parallax transforms
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  // Scroll-based parallax transforms — using spring for smoother GPU-composited movement
+  const rawBackgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const rawAvatarY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const rawContentY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+
+  // Spring smoothing on the heaviest parallax values
+  const backgroundY = useSpring(rawBackgroundY, { stiffness: 80, damping: 25 });
+  const avatarY = useSpring(rawAvatarY, { stiffness: 80, damping: 25 });
+  const contentY = useSpring(rawContentY, { stiffness: 80, damping: 25 });
+
   const avatarScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
-  const avatarY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const floatingElementsY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const nameX = useTransform(scrollYProgress, [0, 0.5], ["0%", "-5%"]);
-  const buttonsY = useTransform(scrollYProgress, [0, 0.6], ["0%", "30%"]);
-  const buttonsOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   useEffect(() => {
     let frameId: number | null = null;
@@ -100,11 +106,11 @@ export function HeroSection() {
   }, [fetchSettings]);
 
   const scrollToProjects = () => {
-    document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+    scrollToSection("projects");
   };
 
   const scrollToContact = () => {
-    document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+    scrollToSection("contact");
   };
 
   const handleDownloadCV = async () => {
@@ -235,7 +241,7 @@ export function HeroSection() {
       {/* Main Content - 2 Column Layout */}
       <motion.div
         className="flex-1 flex flex-col justify-center relative z-10 px-5 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8"
-        style={{ opacity: heroOpacity }}
+        style={{ opacity: heroOpacity, willChange: 'opacity' }}
       >
         <div className="max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center min-h-[65vh]">
@@ -246,7 +252,7 @@ export function HeroSection() {
               initial="hidden"
               animate="visible"
               className="text-center lg:text-left order-2 lg:order-1 will-change-transform"
-              style={{ y: contentY }}
+              style={{ y: contentY, willChange: 'transform' }}
             >
               {/* Typing Name */}
               <motion.div variants={fadeUp} style={{ x: nameX }}>
@@ -298,7 +304,6 @@ export function HeroSection() {
               <motion.div
                 variants={fadeUp}
                 className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center w-full sm:w-auto"
-                style={{ y: buttonsY, opacity: buttonsOpacity }}
               >
                 <Button
                   onClick={scrollToProjects}
@@ -340,7 +345,7 @@ export function HeroSection() {
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-              style={{ scale: avatarScale, y: avatarY }}
+              style={{ scale: avatarScale, y: avatarY, willChange: 'transform' }}
               className="relative flex justify-center lg:justify-end order-1 lg:order-2"
             >
               {/* Float animation wraps everything */}
@@ -619,7 +624,7 @@ export function HeroSection() {
               animate={{ y: [0, 6, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               className="cursor-pointer w-6 h-10 rounded-full border border-white/[0.08] flex items-start justify-center pt-2 hover:border-primary/20 transition-colors"
-              onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => scrollToSection("about")}
             >
               <motion.div
                 animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}

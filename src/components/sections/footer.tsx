@@ -1,8 +1,10 @@
 "use client";
 
 import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 export function Footer() {
+  const { scrollToTop, scrollToSection } = useSmoothScroll();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -69,21 +71,16 @@ export function Footer() {
           <div className="text-center md:text-left">
             <p className="text-cyan-400 font-semibold tracking-wide">Quick Links</p>
             <ul className="mt-6 flex flex-wrap justify-center md:block space-x-4 md:space-x-0 md:space-y-3 text-sm">
-              <li>
-                <a href="#home" className="hover:text-cyan-400 transition-colors">Home</a>
-              </li>
-              <li>
-                <a href="#about" className="hover:text-cyan-400 transition-colors">About</a>
-              </li>
-              <li>
-                <a href="#skills" className="hover:text-cyan-400 transition-colors">Skills</a>
-              </li>
-              <li>
-                <a href="#projects" className="hover:text-cyan-400 transition-colors">Projects</a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-cyan-400 transition-colors">Contact</a>
-              </li>
+              {["Home", "About", "Skills", "Projects", "Contact"].map((label) => (
+                <li key={label}>
+                  <button
+                    onClick={() => label === "Home" ? scrollToTop() : scrollToSection(label.toLowerCase())}
+                    className="hover:text-cyan-400 transition-colors"
+                  >
+                    {label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -133,7 +130,7 @@ export function Footer() {
           <button
             type="button"
             aria-label="Back to top"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => scrollToTop()}
             className="inline-flex items-center gap-2 text-xs md:text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
           >
             <ArrowUp className="h-4 w-4" />

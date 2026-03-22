@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => ({
           'charts-vendor': ['recharts'],
           'motion-vendor': ['framer-motion'],
           'carousel-vendor': ['embla-carousel-react', 'embla-carousel-autoplay'],
-          'supabase-vendor': ['@supabase/supabase-js'],
+          'convex-vendor': ['convex'],
           'query-vendor': ['@tanstack/react-query'],
           'forms-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'utils-vendor': ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority']

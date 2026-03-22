@@ -1,139 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/cjj%20logo.png" />
-    <link rel="shortcut icon" type="image/png" href="/cjj%20logo.png" />
-    <link rel="apple-touch-icon" href="/cjj%20logo.png" />
-    <title>Cristan Jade Jumawan - Portfolio | BSIT Student | Full Stack Developer</title>
-    <meta name="description" content="Personal portfolio of Cristan Jade Jumawan - BSIT Student and Freelance Full Stack Developer specializing in Laravel, React, Next.js, React Native, and modern web technologies" />
-    <meta name="author" content="Cristan Jade Jumawan" />
-    
-    <!-- Proxima Nova Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <meta property="og:title" content="Cristan Jade Jumawan - Portfolio | Full Stack Developer" />
-    <meta property="og:description" content="Personal portfolio showcasing full stack development projects, skills, and experience in web and mobile application development" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/cjj%20logo.png" />
+  <link rel="shortcut icon" type="image/png" href="/cjj%20logo.png" />
+  <link rel="apple-touch-icon" href="/cjj%20logo.png" />
+  <title>Cristan Jade Jumawan - Portfolio | BSIT Student | Full Stack Developer</title>
+  <meta name="description"
+    content="Personal portfolio of Cristan Jade Jumawan - BSIT Student and Freelance Full Stack Developer specializing in Laravel, React, Next.js, React Native, and modern web technologies" />
+  <meta name="author" content="Cristan Jade Jumawan" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@alex_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <!-- Block Vercel Analytics script injection and suppress errors -->
-    <script>
-      (function() {
-        // Block webpage_content_reporter.js script from loading
-        const originalAppendChild = Node.prototype.appendChild;
-        const originalInsertBefore = Node.prototype.insertBefore;
-        const originalCreateElement = Document.prototype.createElement;
-        
-        // Intercept script creation
-        Document.prototype.createElement = function(tagName, options) {
-          const element = originalCreateElement.call(this, tagName, options);
-          
-          if (tagName.toLowerCase() === 'script') {
-            const originalSetAttribute = element.setAttribute;
-            const originalSetAttributeNS = element.setAttributeNS;
-            
-            element.setAttribute = function(name, value) {
-              if (name === 'src' && (
-                String(value).includes('webpage_content_reporter') ||
-                String(value).includes('vercel') && String(value).includes('analytics')
-              )) {
-                // Block the script from loading
-                return;
-              }
-              return originalSetAttribute.call(this, name, value);
-            };
-            
-            element.setAttributeNS = function(namespace, name, value) {
-              if (name === 'src' && (
-                String(value).includes('webpage_content_reporter') ||
-                String(value).includes('vercel') && String(value).includes('analytics')
-              )) {
-                // Block the script from loading
-                return;
-              }
-              return originalSetAttributeNS.call(this, namespace, name, value);
-            };
-          }
-          
-          return element;
-        };
-        
-        // Intercept script insertion
-        Node.prototype.appendChild = function(child) {
-          if (child && child.tagName === 'SCRIPT' && child.src && (
-            child.src.includes('webpage_content_reporter') ||
-            (child.src.includes('vercel') && child.src.includes('analytics'))
-          )) {
-            // Block the script
-            return child;
-          }
-          return originalAppendChild.call(this, child);
-        };
-        
-        Node.prototype.insertBefore = function(newNode, referenceNode) {
-          if (newNode && newNode.tagName === 'SCRIPT' && newNode.src && (
-            newNode.src.includes('webpage_content_reporter') ||
-            (newNode.src.includes('vercel') && newNode.src.includes('analytics'))
-          )) {
-            // Block the script
-            return newNode;
-          }
-          return originalInsertBefore.call(this, newNode, referenceNode);
-        };
-        
-        // Suppress Vercel Analytics webpage_content_reporter.js errors
-        const originalError = window.onerror;
-        window.onerror = function(msg, source, lineno, colno, error) {
-          const sourceStr = String(source || '');
-          const msgStr = String(msg || '');
-          
-          // Catch webpage_content_reporter.js errors
-          if (
-            sourceStr.includes('webpage_content_reporter') ||
-            (sourceStr.includes('vercel') && msgStr.includes('Unexpected token')) ||
-            (msgStr.includes('Unexpected token') && msgStr.includes('export') && sourceStr.includes('vercel')) ||
-            (sourceStr.includes('analytics') && msgStr.includes('Unexpected token'))
-          ) {
-            return true; // Suppress error
-          }
-          
-          if (originalError) {
-            return originalError.call(this, msg, source, lineno, colno, error);
-          }
+  <!-- Proxima Nova Font (Inter is used as substitute / body font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <!-- General Sans from Fontshare -->
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap" rel="stylesheet">
+
+  <meta property="og:title" content="Cristan Jade Jumawan - Portfolio | Full Stack Developer" />
+  <meta property="og:description"
+    content="Personal portfolio showcasing full stack development projects, skills, and experience in web and mobile application development" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@alex_dev" />
+  <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+  <!-- Block Vercel Analytics script injection and suppress errors -->
+  <script>
+    (function () {
+      // Block webpage_content_reporter.js script from loading
+      const originalAppendChild = Node.prototype.appendChild;
+      const originalInsertBefore = Node.prototype.insertBefore;
+      const originalCreateElement = Document.prototype.createElement;
+
+      // Intercept script creation
+      Document.prototype.createElement = function (tagName, options) {
+        const element = originalCreateElement.call(this, tagName, options);
+
+        if (tagName.toLowerCase() === 'script') {
+          const originalSetAttribute = element.setAttribute;
+          const originalSetAttributeNS = element.setAttributeNS;
+
+          element.setAttribute = function (name, value) {
+            if (name === 'src' && (
+              String(value).includes('webpage_content_reporter') ||
+              String(value).includes('vercel') && String(value).includes('analytics')
+            )) {
+              // Block the script from loading
+              return;
+            }
+            return originalSetAttribute.call(this, name, value);
+          };
+
+          element.setAttributeNS = function (namespace, name, value) {
+            if (name === 'src' && (
+              String(value).includes('webpage_content_reporter') ||
+              String(value).includes('vercel') && String(value).includes('analytics')
+            )) {
+              // Block the script from loading
+              return;
+            }
+            return originalSetAttributeNS.call(this, namespace, name, value);
+          };
+        }
+
+        return element;
+      };
+
+      // Intercept script insertion
+      Node.prototype.appendChild = function (child) {
+        if (child && child.tagName === 'SCRIPT' && child.src && (
+          child.src.includes('webpage_content_reporter') ||
+          (child.src.includes('vercel') && child.src.includes('analytics'))
+        )) {
+          // Block the script
+          return child;
+        }
+        return originalAppendChild.call(this, child);
+      };
+
+      Node.prototype.insertBefore = function (newNode, referenceNode) {
+        if (newNode && newNode.tagName === 'SCRIPT' && newNode.src && (
+          newNode.src.includes('webpage_content_reporter') ||
+          (newNode.src.includes('vercel') && newNode.src.includes('analytics'))
+        )) {
+          // Block the script
+          return newNode;
+        }
+        return originalInsertBefore.call(this, newNode, referenceNode);
+      };
+
+      // Suppress Vercel Analytics webpage_content_reporter.js errors
+      const originalError = window.onerror;
+      window.onerror = function (msg, source, lineno, colno, error) {
+        const sourceStr = String(source || '');
+        const msgStr = String(msg || '');
+
+        // Catch webpage_content_reporter.js errors
+        if (
+          sourceStr.includes('webpage_content_reporter') ||
+          (sourceStr.includes('vercel') && msgStr.includes('Unexpected token')) ||
+          (msgStr.includes('Unexpected token') && msgStr.includes('export') && sourceStr.includes('vercel')) ||
+          (sourceStr.includes('analytics') && msgStr.includes('Unexpected token'))
+        ) {
+          return true; // Suppress error
+        }
+
+        if (originalError) {
+          return originalError.call(this, msg, source, lineno, colno, error);
+        }
+        return false;
+      };
+
+      // Also catch errors via addEventListener (more modern approach)
+      window.addEventListener('error', function (event) {
+        const filename = String(event.filename || '');
+        const message = String(event.message || '');
+
+        if (
+          filename.includes('webpage_content_reporter') ||
+          (filename.includes('vercel') && message.includes('Unexpected token')) ||
+          (message.includes('Unexpected token') && message.includes('export') && filename.includes('vercel')) ||
+          (filename.includes('analytics') && message.includes('Unexpected token'))
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
           return false;
-        };
-        
-        // Also catch errors via addEventListener (more modern approach)
-        window.addEventListener('error', function(event) {
-          const filename = String(event.filename || '');
-          const message = String(event.message || '');
-          
-          if (
-            filename.includes('webpage_content_reporter') ||
-            (filename.includes('vercel') && message.includes('Unexpected token')) ||
-            (message.includes('Unexpected token') && message.includes('export') && filename.includes('vercel')) ||
-            (filename.includes('analytics') && message.includes('Unexpected token'))
-          ) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            return false;
-          }
-        }, true);
-      })();
-    </script>
-  </head>
+        }
+      }, true);
+    })();
+  </script>
+</head>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

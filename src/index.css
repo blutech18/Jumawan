@@ -90,11 +90,22 @@ All colors MUST be HSL.
     /* select-none disables selection */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent native smooth-scroll from fighting Lenis */
+    scroll-behavior: auto !important;
     /* Hide scrollbar globally */
     scrollbar-width: none !important;
     /* Firefox */
     -ms-overflow-style: none !important;
     /* IE/Edge */
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
   }
 
   html::-webkit-scrollbar,
@@ -152,9 +163,39 @@ All colors MUST be HSL.
     pointer-events: none;
   }
 
+  /* GPU compositing hints for animated elements */
+  .will-change-transform {
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
   /* Enable momentum scrolling on iOS */
   body {
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Content-visibility optimization for off-screen sections */
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 800px;
+  }
+
+  /* Ensure all motion.div animated elements use GPU compositing */
+  [style*="transform"] {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Smooth section transition styles */
+  section {
+    transition: opacity 0.3s, transform 0.3s;
   }
 
   /* Respect reduced motion preferences */

@@ -1,6 +1,26 @@
 import { create } from 'zustand';
-import { WorkExperience } from '@/lib/supabase';
-import { safeSupabase } from '@/lib/supabase-safe';
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../convex/_generated/api';
+
+export interface WorkExperience {
+  _id: string;
+  id: string;
+  company: string;
+  position: string;
+  type: 'Full-time' | 'Part-time' | 'Freelance' | 'Internship' | 'Contract';
+  location: string;
+  start_date: string;
+  end_date?: string;
+  current: boolean;
+  duration?: string;
+  achievements: string[];
+  responsibilities: string[];
+  technologies: string[];
+  team_size?: string;
+  company_size?: string;
+  order_index: number;
+  _creationTime: number;
+}
 
 interface ExperienceState {
   experiences: WorkExperience[];
@@ -15,18 +35,13 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
   error: null,
   fetchExperiences: async () => {
     set({ loading: true, error: null });
-    
-    const { data } = await safeSupabase.safeQuery<WorkExperience[]>(
-      async (client) => {
-        return await client
-          .from('work_experience')
-          .select('*')
-          .order('order_index', { ascending: true })
-          .order('start_date', { ascending: false });
-      },
-      [] // Fallback to empty array
-    );
-
-    set({ experiences: data || [], loading: false });
+    try {
+      const data = await convexClient.query(api.workExperience.list);
+      const mapped = (data || []).map((e: any) => ({ ...e, id: e._id }));
+      set({ experiences: mapped, loading: false });
+    } catch (error) {
+      console.warn('Failed to fetch experiences:', error);
+      set({ experiences: [], loading: false });
+    }
   },
 }));

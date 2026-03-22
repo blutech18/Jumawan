@@ -1,25 +1,22 @@
-"use client";
-
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { ExternalLink, Github, FolderOpen, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from "lucide-react";
 import {
   AlertDialog,
-  AlertDialogTrigger,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { Project } from "@/lib/supabase";
-import { safeSupabase } from "@/lib/supabase-safe";
-import { useProjectStore } from "@/stores/useProjectStore";
+import { useProjectStore, Project } from "@/stores/useProjectStore";
+import { ProjectCard } from "./ProjectCard";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../../convex/_generated/api';
+import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { ChevronLeft, ChevronRight, ExternalLink, FolderOpen, Github, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 export function ProjectsSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -34,17 +31,13 @@ export function ProjectsSection() {
   }, [fetchProjects]);
 
   const trackPageView = async () => {
-    if (!safeSupabase.isAvailable()) return;
     try {
-      await safeSupabase.client!
-        .from('analytics')
-        .insert([{
-          event_type: 'page_view',
-          page_url: '/projects',
-          event_data: { section: 'projects' }
-        }]);
+      await convexClient.mutation(api.analytics.track, {
+        event_type: 'page_view',
+        page_url: '/projects',
+        event_data: { section: 'projects' },
+      });
     } catch (error) {
-      // Silently fail analytics - don't break the app
       console.warn('Analytics tracking error:', error);
     }
   };
@@ -83,50 +76,58 @@ export function ProjectsSection() {
   useEffect(() => {
     if (!isModalOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
         showPrev();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
         showNext();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [isModalOpen, showPrev, showNext]);
 
-  const [ref, inView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
-
-  const containerVariants = useMemo(() => ({
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        staggerChildren: shouldReduceMotion ? 0 : 0.12,
+  const containerVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          duration: 0.4,
+          staggerChildren: shouldReduceMotion ? 0 : 0.12,
+        },
       },
-    },
-  }), [shouldReduceMotion]);
+    }),
+    [shouldReduceMotion],
+  );
 
-  const itemVariants = useMemo(() => ({
-    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 24, scale: shouldReduceMotion ? 1 : 0.98 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: shouldReduceMotion ? 0.3 : 0.5,
-        ease: [0.4, 0, 0.2, 1] as const,
+  const itemVariants = useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        y: shouldReduceMotion ? 0 : 24,
+        scale: shouldReduceMotion ? 1 : 0.98,
       },
-    },
-  }), [shouldReduceMotion]);
+      visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: {
+          duration: shouldReduceMotion ? 0.3 : 0.5,
+          ease: [0.4, 0, 0.2, 1] as const,
+        },
+      },
+    }),
+    [shouldReduceMotion],
+  );
 
   if (loading) {
     return (
-      <section id="projects" className="py-20 bg-transparent relative overflow-hidden">
+      <section
+        id="projects"
+        className="py-20 bg-transparent relative overflow-hidden"
+      >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
@@ -139,41 +140,26 @@ export function ProjectsSection() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[...Array(4)].map((_, idx) => (
-              <Card key={idx} className="h-full bg-gradient-card border-border/20 shadow-card overflow-hidden">
+              <div key={idx} className="h-full bg-gradient-card border-border/20 shadow-card overflow-hidden rounded-xl">
                 <div className="relative h-48 w-full">
-                  <Skeleton className="absolute inset-0" />
+                  <div className="absolute inset-0 bg-black/5 animate-pulse" />
                 </div>
                 <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <Skeleton className="h-6 w-1/2" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-5 w-16" />
-                      <Skeleton className="h-5 w-20" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-black/5 animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-6 w-3/5 bg-black/5 animate-pulse rounded-md" />
+                      <div className="h-4 w-2/5 bg-black/5 animate-pulse rounded-md" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <Skeleton className="h-6 w-12" />
-                    <Skeleton className="h-6 w-10" />
-                    <Skeleton className="h-6 w-10" />
-                  </div>
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/6" />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-14" />
-                    <Skeleton className="h-6 w-24" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Skeleton className="h-9 w-full" />
+                    <div className="h-4 w-full bg-black/5 animate-pulse rounded-md" />
+                    <div className="h-4 w-5/6 bg-black/5 animate-pulse rounded-md" />
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -182,19 +168,20 @@ export function ProjectsSection() {
   }
 
   return (
-    <section id="projects" className="py-20 bg-transparent relative overflow-hidden border-none outline-none">
+    <section
+      id="projects"
+      className="py-20 bg-transparent relative overflow-hidden border-none outline-none"
+    >
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
-          ref={ref}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
           variants={containerVariants}
           className="flex flex-col items-center mb-16 mx-auto w-fit"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">
-            <span className="text-cyan-400">
-              Featured Projects
-            </span>
+            <span className="text-cyan-400">Featured Projects</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center font-medium">
             A showcase of my best work and creative solutions
@@ -204,118 +191,24 @@ export function ProjectsSection() {
         {projects.length === 0 ? (
           <div className="text-center py-12">
             <FolderOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">No projects yet</h3>
-            <p className="text-muted-foreground">Featured projects will be displayed here once added</p>
+            <h3 className="text-xl font-medium text-white mb-2">
+              No projects yet
+            </h3>
+            <p className="text-muted-foreground">
+              Featured projects will be displayed here once added
+            </p>
           </div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {projects.map((project, index) => (
-              <motion.div
+              <ProjectCard
                 key={project.id}
-                variants={itemVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.2 }}
-                className="transform-gpu"
-                style={{ willChange: "transform, opacity" }}
-              >
-                <Card className="h-full bg-gradient-card border-border/20 shadow-card hover:shadow-glow transition-all duration-300 group overflow-hidden">
-                  {/* Project Image */}
-                  {project.image_url && (
-                    <button
-                      type="button"
-                      className="relative h-48 w-full overflow-hidden will-change-transform transform-gpu text-left"
-                      onClick={() => openModalAt(index)}
-                      aria-label={`View details for ${project.title}`}
-                    >
-                      <OptimizedImage
-                        src={project.image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                      <div className="absolute bottom-3 right-3">
-                        <span className="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-md bg-background/80 backdrop-blur border border-border/40 text-foreground/90 shadow-sm">
-                          View Details
-                        </span>
-                      </div>
-                    </button>
-                  )}
-
-                  <div className="p-6">
-                    <div className="mb-3">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                            {project.title}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] sm:text-xs px-2 py-0.5">Featured</Badge>
-                          {project.github_url && (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs px-2 py-0.5">Open Source</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Professional meta */}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-                      {project.created_at && (
-                        <span className="rounded-md bg-primary/5 px-2 py-1 border border-border/30">
-                          {new Date(project.created_at).getFullYear()}
-                        </span>
-                      )}
-                      {project.live_url && (
-                        <span className="rounded-md bg-emerald-500/10 text-emerald-400 px-2 py-1 border border-emerald-500/20">Live</span>
-                      )}
-                      {project.github_url && (
-                        <span className="rounded-md bg-indigo-500/10 text-indigo-400 px-2 py-1 border border-indigo-500/20">Code</span>
-                      )}
-                    </div>
-
-                    <p className="text-muted-foreground mb-4 line-clamp-3">
-                      {project.description}
-                    </p>
-
-                    {/* Technologies */}
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {project.technologies.slice(0, 4).map((tech, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs bg-primary/5 text-primary border-primary/20"
-                        >
-                          {tech}
-                        </Badge>
-                      ))}
-                      {project.technologies.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{project.technologies.length - 4} more
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 mt-auto">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="flex-1"
-                        onClick={() => openModalAt(index)}
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+                project={project}
+                index={index}
+                openModalAt={openModalAt}
+              />
             ))}
-          </motion.div>
+          </div>
         )}
         {/* Modal mount */}
         <ProjectsModal
@@ -357,78 +250,93 @@ export function ProjectsModal({
   if (!project) return null;
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="w-[95vw] sm:w-[92vw] md:w-[90vw] max-w-[95vw] sm:max-w-[92vw] md:max-w-[900px] lg:max-w-[1100px] max-h-[86vh] p-0 overflow-hidden sm:rounded-xl shadow-2xl ring-1 ring-border/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
-        <AlertDialogHeader className="px-2 py-1 sm:px-3 sm:py-2 space-y-0">
-          <div className="flex items-center justify-between gap-2">
-            <AlertDialogTitle className="text-xs sm:text-sm font-medium truncate">
+      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-zinc-950/90 backdrop-blur-xl supports-[backdrop-filter]:backdrop-blur-xl border-none">
+        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="flex items-start justify-between gap-4 pointer-events-auto">
+            <AlertDialogTitle className="text-base md:text-lg font-bold text-white/90 tracking-tight drop-shadow-md line-clamp-1 mt-1">
               {project.title}
             </AlertDialogTitle>
-            <div className="flex items-center gap-1 flex-nowrap overflow-x-auto">
+            <div className="flex items-center gap-2">
               {project.live_url && (
-                <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors" title="Live Demo">
+                <a
+                  href={project.live_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                  title="Live Demo"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               )}
               {project.github_url && (
-                <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors" title="Source Code">
+                <a
+                  href={project.github_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                  title="Source Code"
+                >
                   <Github className="h-4 w-4" />
                 </a>
               )}
-              {project.image_url && (
-                <button onClick={() => setIsZoomed(!isZoomed)} className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors" title={isZoomed ? 'Zoom out' : 'Zoom in'}>
-                  {isZoomed ? <ZoomOut className="h-4 w-4" /> : <ZoomIn className="h-4 w-4" />}
-                </button>
-              )}
               <AlertDialogCancel asChild>
-                <button className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors" title="Close">
+                <button
+                  className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                  title="Close"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </AlertDialogCancel>
             </div>
           </div>
         </AlertDialogHeader>
-        <div className="relative w-full">
-          {/* Media */}
-          {project.image_url ? (
-            <div className="relative w-full bg-black/60">
-              <div className="relative mx-auto max-w-[92vw] sm:max-w-[88vw] md:max-w-[860px] lg:max-w-[1040px] aspect-[16/9]">
+        <div className="flex flex-col h-[85vh] md:h-[80vh]">
+          <div
+            className={`relative flex-1 bg-black/95 flex items-center justify-center group overflow-hidden overscroll-contain`}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 to-transparent opacity-50 pointer-events-none" />
+
+            {project.image_url ? (
+              <div
+                className="relative w-full h-full flex items-center justify-center"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 <OptimizedImage
                   src={project.image_url}
                   alt={project.title}
-                  className={`absolute inset-0 w-full h-full object-contain transition-transform duration-300 ${isZoomed ? 'scale-100' : 'scale-95'}`}
-                  fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
+                  className={`select-none shadow-2xl pointer-events-none w-full h-full object-contain`}
+                  draggable={false}
+                  fallbackIcon={
+                    <FolderOpen className="h-20 w-20 text-muted-foreground/30" />
+                  }
                 />
               </div>
-              {/* Navigation */}
-              <button
-                onClick={onPrev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors"
-                aria-label="Previous"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                onClick={onNext}
-                className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 rounded-md bg-muted/40 hover:bg-muted/60 text-foreground/80 hover:text-foreground transition-colors"
-                aria-label="Next"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <FolderOpen className="w-10 h-10" />
-            </div>
-          )}
-          {/* Details */}
-          <div className="p-4 sm:p-6">
-            <p className="text-sm text-muted-foreground mb-4">{project.description}</p>
-            <div className="flex flex-wrap gap-2">
-              {project.technologies.map((tech, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
-                  {tech}
-                </Badge>
-              ))}
+            ) : (
+              <div className="flex flex-col items-center gap-4 text-muted-foreground/30">
+                <FolderOpen className="h-20 w-20" />
+                <span className="text-sm font-medium">No Image Available</span>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0 bg-background/95 backdrop-blur-md border-t border-white/5 px-6 py-5 md:px-8 md:py-6">
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
+                {project.description}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {project.technologies.map((tech, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="outline"
+                    className="text-xs bg-primary/5 text-primary border-primary/20"
+                  >
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
         </div>

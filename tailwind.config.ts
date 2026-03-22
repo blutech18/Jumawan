@@ -20,6 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['Inter', 'system-ui', 'sans-serif'],
+				heading: ['"General Sans"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -118,10 +119,11 @@ export default {
 					'0%': { opacity: '0', transform: 'translateX(100px)' },
 					'100%': { opacity: '1', transform: 'translateX(0)' }
 				},
-				'infinite-scroll': {
-					'0%': { transform: 'translateX(0)' },
-					'100%': { transform: 'translateX(-100%)' }
-				}
+				scroll: {
+					to: {
+						transform: "translate(calc(-50% - 0.5rem))",
+					},
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -131,7 +133,7 @@ export default {
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'slide-in-right': 'slide-in-right 0.7s ease-out',
-				'infinite-scroll': 'infinite-scroll 20s linear infinite'
+				scroll: "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
 			}
 		}
 	},

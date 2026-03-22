@@ -1,6 +1,20 @@
 import { create } from 'zustand';
-import { Project } from '@/lib/supabase';
-import { safeSupabase } from '@/lib/supabase-safe';
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../convex/_generated/api';
+
+export interface Project {
+  _id: string;
+  id: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  live_url?: string;
+  github_url?: string;
+  technologies: string[];
+  featured: boolean;
+  order_index: number;
+  _creationTime: number;
+}
 
 interface ProjectState {
   projects: Project[];
@@ -15,18 +29,13 @@ export const useProjectStore = create<ProjectState>((set) => ({
   error: null,
   fetchProjects: async () => {
     set({ loading: true, error: null });
-    
-    const { data } = await safeSupabase.safeQuery<Project[]>(
-      async (client) => {
-        return await client
-          .from('projects')
-          .select('*')
-          .eq('featured', true)
-          .order('order_index', { ascending: true });
-      },
-      [] // Fallback to empty array
-    );
-
-    set({ projects: data || [], loading: false });
+    try {
+      const data = await convexClient.query(api.projects.listFeatured);
+      const mapped = (data || []).map((p: any) => ({ ...p, id: p._id }));
+      set({ projects: mapped, loading: false });
+    } catch (error) {
+      console.warn('Failed to fetch projects:', error);
+      set({ projects: [], loading: false });
+    }
   },
 }));

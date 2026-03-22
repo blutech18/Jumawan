@@ -20,37 +20,6 @@ window.addEventListener('error', (event) => {
     event.stopImmediatePropagation();
     return false;
   }
-  
-  // Suppress WebSocket connection errors from Supabase
-  if (
-    message.includes('WebSocket') ||
-    message.includes('websocket') ||
-    message.includes('wss://') ||
-    message.includes('realtime')
-  ) {
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  }
 }, true);
-
-// Handle unhandled promise rejections
-window.addEventListener('unhandledrejection', (event) => {
-  const reason = event.reason;
-  const message = reason?.message || reason?.toString() || '';
-  
-  // Suppress network errors from Supabase when offline/unreachable
-  if (
-    message.includes('Failed to fetch') ||
-    message.includes('ERR_NAME_NOT_RESOLVED') ||
-    message.includes('NetworkError') ||
-    message.includes('WebSocket') ||
-    message.includes('websocket') ||
-    message.includes('realtime')
-  ) {
-    event.preventDefault();
-    return false;
-  }
-});
 
 createRoot(document.getElementById("root")!).render(<App />);

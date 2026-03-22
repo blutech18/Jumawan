@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Github, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 const navigationItems = [
   { name: "Home", href: "#home" },
@@ -13,15 +14,13 @@ const navigationItems = [
   { name: "Contact", href: "#contact" },
 ];
 
-import { useLenis } from "lenis/react";
-
 
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const lenis = useLenis();
+  const { scrollToSection: smoothScrollTo, scrollToTop } = useSmoothScroll();
 
   useEffect(() => {
     let ticking = false;
@@ -62,26 +61,16 @@ export function Navigation() {
     const sectionId = href.substring(1);
 
     const performScroll = () => {
-      const element = document.getElementById(sectionId);
-      if (!element) return;
-
-      const header = document.querySelector("header");
-      const headerHeight = (header as HTMLElement | null)?.offsetHeight ?? 0;
-      // Offset needs to be negative to leave space for the header
-      const offset = -headerHeight - 8;
-
-      if (lenis) {
-        lenis.scrollTo(element, { offset });
+      if (sectionId === "home") {
+        scrollToTop();
       } else {
-        // Fallback if lenis is not available (though it should be)
-        const targetY = element.getBoundingClientRect().top + window.scrollY + offset;
-        window.scrollTo({ top: Math.max(targetY, 0), behavior: "smooth" });
+        smoothScrollTo(sectionId);
       }
 
       // Update active section after scroll animation completes
       setTimeout(() => {
         setActiveSection(sectionId);
-      }, 1000); // Slightly longer wait for smooth scroll
+      }, 1000);
     };
 
     if (isMobileMenuOpen) {

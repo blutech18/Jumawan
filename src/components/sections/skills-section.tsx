@@ -1,43 +1,48 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import { useSkillStore } from "@/stores/useSkillStore";
-
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 export function SkillsSection() {
-  const { skillCategories } = useSkillStore();
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
+  const { skillCategories, fetchCategories } = useSkillStore();
+  const { scrollToSection } = useSmoothScroll();
 
-  const containerVariants = {
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
+        delayChildren: 0.05,
       },
     },
-  };
+  }), []);
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+  const itemVariants = useMemo(() => ({
+    hidden: { y: 30, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring" as const, stiffness: 100, damping: 15 },
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+      },
     },
-  };
+  }), []);
 
   return (
     <section id="skills" className="py-24 relative overflow-hidden">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div
-          ref={ref}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
           variants={containerVariants}
           className="max-w-6xl mx-auto"
         >
@@ -57,12 +62,12 @@ export function SkillsSection() {
           {/* Skills Grid - Minimalist Layout */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {skillCategories.map((category, index) => (
-              <motion.div key={category.title} variants={itemVariants}>
+              <motion.div key={`${category.title}-${index}`} variants={itemVariants}>
                 <div className="p-6 h-full border border-border/50 rounded-xl transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
                   <div className="space-y-6">
                     {/* Category Header */}
                     <div className="flex items-center gap-3 border-b border-border/50 pb-3">
-                      <category.icon className={`h-5 w-5 ${category.color.replace('bg-', 'text-').replace('-500', '-500')}`} />
+                      <category.icon className={`h-5 w-5 ${category.color}`} />
                       <h3 className="text-xl font-semibold text-foreground tracking-tight">
                         {category.title}
                       </h3>
@@ -97,7 +102,7 @@ export function SkillsSection() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => scrollToSection("projects")}
               className="px-8 py-3 bg-foreground text-background hover:bg-foreground/90 font-medium rounded-full transition-all duration-300"
             >
               View My Projects

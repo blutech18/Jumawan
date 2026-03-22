@@ -1,6 +1,21 @@
 import { create } from 'zustand';
-import { Certificate } from '@/lib/supabase';
-import { safeSupabase } from '@/lib/supabase-safe';
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../convex/_generated/api';
+
+export interface Certificate {
+  _id: string;
+  id: string;
+  title: string;
+  issuer: string;
+  issue_date: string;
+  credential_id?: string;
+  credential_url?: string;
+  image_url?: string;
+  description?: string;
+  order_index: number;
+  type?: 'participation' | 'recognition';
+  _creationTime: number;
+}
 
 interface CertificateState {
   certificates: Certificate[];
@@ -17,46 +32,19 @@ export const useCertificateStore = create<CertificateState>((set, get) => ({
 
   fetchCertificates: async () => {
     set({ loading: true, error: null });
-    
-    const { data } = await safeSupabase.safeQuery<Certificate[]>(
-      async (client) => {
-        return await client
-          .from('certificates')
-          .select('*')
-          .order('order_index', { ascending: true });
-      },
-      [] // Fallback to empty array
-    );
-
-    set({ certificates: data || [], loading: false });
+    try {
+      const data = await convexClient.query(api.certificates.list);
+      const mapped = (data || []).map((c: any) => ({ ...c, id: c._id }));
+      set({ certificates: mapped, loading: false });
+    } catch (error) {
+      console.warn('Failed to fetch certificates:', error);
+      set({ certificates: [], loading: false });
+    }
   },
 
+  // Convex provides automatic reactivity via useQuery - this is a no-op for compatibility
   subscribeToChanges: () => {
-    return safeSupabase.safeSubscribe(
-      'certificates-realtime',
-      (payload) => {
-        const { eventType, new: newRecord, old: oldRecord } = payload;
-
-        set((state) => {
-          let updated = [...state.certificates];
-
-          if (eventType === 'INSERT') {
-            updated.push(newRecord as Certificate);
-          } else if (eventType === 'UPDATE') {
-            updated = updated.map((cert) =>
-              cert.id === (newRecord as Certificate).id ? (newRecord as Certificate) : cert
-            );
-          } else if (eventType === 'DELETE') {
-            updated = updated.filter((cert) => cert.id !== (oldRecord as Certificate).id);
-          }
-
-          // Sort by order_index
-          updated.sort((a, b) => a.order_index - b.order_index);
-
-          return { certificates: updated };
-        });
-      },
-      { event: '*', schema: 'public', table: 'certificates' }
-    );
+    // Convex handles reactivity automatically
+    return () => {};
   },
 }));

@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring, MotionValue, useMotionValue, useAnimationFrame, useMotionTemplate } from "framer-motion";
-import { safeSupabase } from "@/lib/supabase-safe";
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../../convex/_generated/api';
 
 // --- Types ---
 interface Tool {
@@ -143,45 +144,38 @@ export function ToolsCarousel() {
   const [outerRing, setOuterRing] = useState<DisplayTool[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch tools from Supabase
+  // Fetch tools from Convex
   useEffect(() => {
     const fetchTools = async () => {
-      const { data } = await safeSupabase.safeQuery<Tool[]>(
-        async (client) => {
-          return await client
-            .from('tools')
-            .select('*')
-            .eq('is_active', true)
-            .order('order_index', { ascending: true });
-        },
-        [] // Fallback to empty array
-      );
+      try {
+        const data = await convexClient.query(api.tools.listActive);
 
-      if (data && data.length > 0) {
-        // Transform data for display and Deduplicate by name
-        const uniqueToolsMap = new Map();
-        data.forEach((t: Tool) => {
-          if (!uniqueToolsMap.has(t.name)) {
-            uniqueToolsMap.set(t.name, {
-              name: t.name,
-              image: t.icon_url
-            });
-          }
-        });
-        const allTools = Array.from(uniqueToolsMap.values());
+        if (data && data.length > 0) {
+          // Transform data for display and Deduplicate by name
+          const uniqueToolsMap = new Map();
+          data.forEach((t: any) => {
+            if (!uniqueToolsMap.has(t.name)) {
+              uniqueToolsMap.set(t.name, {
+                name: t.name,
+                image: t.icon_url
+              });
+            }
+          });
+          const allTools = Array.from(uniqueToolsMap.values());
 
-        // Smart Distribution Logic (Automatic 3-Ring Split)
-        // Goal: ~20% Inner, ~35% Middle, ~45% Outer
-        const total = allTools.length;
-        const innerCount = Math.max(3, Math.floor(total * 0.2));
-        const middleCount = Math.max(5, Math.floor(total * 0.35));
-        // Remaining goes to outer
+          // Smart Distribution Logic (Automatic 3-Ring Split)
+          const total = allTools.length;
+          const innerCount = Math.max(3, Math.floor(total * 0.2));
+          const middleCount = Math.max(5, Math.floor(total * 0.35));
 
-        setInnerRing(allTools.slice(0, innerCount));
-        setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
-        setOuterRing(allTools.slice(innerCount + middleCount));
+          setInnerRing(allTools.slice(0, innerCount));
+          setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
+          setOuterRing(allTools.slice(innerCount + middleCount));
+        }
+      } catch (error) {
+        console.warn('Failed to fetch tools:', error);
       }
-      
+
       setLoading(false);
     };
 
@@ -317,6 +311,7 @@ export function ToolsCarousel() {
             repeatType: "reverse",
             ease: "easeInOut"
           }}
+          style={{ willChange: 'transform' }}
           className="relative group w-[240px] h-[240px] sm:w-[400px] sm:h-[400px] md:w-[560px] md:h-[560px] flex items-center justify-center perspective-1000"
         >
           {/* Central Sun / Core */}
@@ -398,7 +393,7 @@ export function ToolsCarousel() {
 
           {/* --- PLANETS --- */}
 
-          <div className="absolute inset-0 scale-[0.5] sm:scale-[0.75] md:scale-100 origin-center pointer-events-none">
+          <div className="absolute inset-0 scale-[0.5] sm:scale-[0.75] md:scale-100 origin-center pointer-events-none" style={{ willChange: 'transform' }}>
             <div className="absolute inset-0 pointer-events-auto z-30">
               {/* Inner Ring - Base Radius 160 */}
               {innerRing.map((tool, i) => (

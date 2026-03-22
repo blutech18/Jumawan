@@ -9,7 +9,7 @@ import { EducationSection } from "@/components/sections/education-section";
 import { ProjectsSection } from "@/components/sections/projects-section";
 import { ContactSection } from "@/components/sections/contact-section-dynamic";
 import { Footer } from "@/components/sections/footer";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { useRef } from "react";
 import "@/styles/galaxy-background.css";
 
@@ -22,13 +22,20 @@ const Portfolio = () => {
     offset: ["start start", "end end"]
   });
 
-  // Scroll-based parallax transforms for star layers
-  const starsLayer1Y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const starsLayer2Y = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const starsLayer3Y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  // Spring-smoothed scroll progress — prevents choppy jumps on fast scroll
+  const smoothScroll = useSpring(scrollYProgress, {
+    stiffness: 60,
+    damping: 30,
+    restDelta: 0.0005,
+  });
+
+  // Scroll-based parallax transforms for star layers (reduced distances for smoother feel)
+  const starsLayer1Y = useTransform(smoothScroll, [0, 1], ["0%", "12%"]);
+  const starsLayer2Y = useTransform(smoothScroll, [0, 1], ["0%", "22%"]);
+  const starsLayer3Y = useTransform(smoothScroll, [0, 1], ["0%", "32%"]);
 
   // Nebula parallax (slower movement for depth)
-  const nebulaY = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
+  const nebulaY = useTransform(smoothScroll, [0, 1], ["0%", "10%"]);
 
   return (
     <div className="min-h-screen bg-[#030014] text-foreground">
@@ -44,21 +51,21 @@ const Portfolio = () => {
             {/* Layer 1 - Slow parallax stars */}
             <motion.div
               className="stars-layer stars-layer-1"
-              style={{ y: starsLayer1Y }}
+              style={{ y: starsLayer1Y, willChange: 'transform' }}
             />
             {/* Layer 2 - Medium parallax stars */}
             <motion.div
               className="stars-layer stars-layer-2"
-              style={{ y: starsLayer2Y }}
+              style={{ y: starsLayer2Y, willChange: 'transform' }}
             />
             {/* Layer 3 - Fast parallax stars with twinkle */}
             <motion.div
               className="stars-layer stars-layer-3"
-              style={{ y: starsLayer3Y }}
+              style={{ y: starsLayer3Y, willChange: 'transform' }}
             />
 
             {/* Nebula glow effects - scroll-based parallax */}
-            <motion.div style={{ y: nebulaY }}>
+            <motion.div style={{ y: nebulaY, willChange: 'transform' }}>
               <div className="nebula-glow nebula-1" />
               <div className="nebula-glow nebula-2" />
               <div className="nebula-glow nebula-3" />

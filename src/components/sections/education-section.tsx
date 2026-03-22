@@ -2,17 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { useInView } from "react-intersection-observer";
 import { Calendar, MapPin, Star, Terminal } from "lucide-react";
 
 import { useEducationStore } from "@/stores/useEducationStore";
 
 export function EducationSection() {
   const { education } = useEducationStore();
-  const [ref, inView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
 
   const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
@@ -41,9 +36,9 @@ export function EducationSection() {
     <section id="education" className="py-24 relative overflow-hidden bg-transparent">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div
-          ref={ref}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.05 }}
           variants={containerVariants}
           className="max-w-6xl mx-auto"
         >

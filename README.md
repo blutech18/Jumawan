@@ -1,7 +1,7 @@
-## Cristan Jade Jumawan – Portfolio (Frontend)
+﻿## Cristan Jade Jumawan – Portfolio (Frontend)
 
 This project is the **public portfolio site** for Cristan Jade Jumawan.  
-It is a React + TypeScript single‑page application built with Vite, Tailwind CSS, and shadcn‑ui, backed by Supabase for data and storage.
+It is a React + TypeScript single‑page application built with Vite, Tailwind CSS, and shadcn‑ui, backed by Convex for data and storage.
 
 The admin panel that manages this portfolio lives in a separate project: `Jumawan_Portfolio-Admin`.
 
@@ -11,7 +11,7 @@ The admin panel that manages this portfolio lives in a separate project: `Jumawa
 
 - **Hero & About** – Intro, professional summary, and carousel imagery.
 - **Skills & Tools** – Detailed skills grid and tools carousel.
-- **Work Experience** – Dynamic timeline backed by the `work_experience` table in Supabase.
+- **Work Experience** – Dynamic timeline backed by the `work_experience` table in Convex.
 - **Certificates & Achievements** – Dynamic list backed by the `certificates` table.
 - **Featured Projects** – Dynamic grid backed by the `projects` table with modal view.
 - **Contact / “Let’s Work Together”** – Contact form that writes to the `contact_messages` table.
@@ -27,8 +27,8 @@ All dynamic content (projects, certificates, experience, contact messages, analy
 - **Tooling**: Vite
 - **Styling**: Tailwind CSS, custom navy theme
 - **UI Library**: shadcn‑ui (Radix primitives)
-- **Data**: Supabase (PostgreSQL + Storage)
-- **State / Data Fetching**: @tanstack/react-query
+- **Data**: Convex (real-time backend)
+- **State / Data Fetching**: @tanstack/react-query + Convex client
 - **Animations**: Framer Motion
 
 ---
@@ -38,41 +38,36 @@ All dynamic content (projects, certificates, experience, contact messages, analy
 ### 1. Prerequisites
 
 - Node.js 18+ and npm
-- A Supabase project (same instance as the admin app)
+- A Convex project (shared with the admin app)
 
 ### 2. Install dependencies
 
 ```sh
-cd Jumawan_Portfolio
+cd Jumawan
 npm install
 ```
 
 ### 3. Environment variables
 
-Create a `.env.local` file in `Jumawan_Portfolio` with:
+Create a `.env.local` file with:
 
 ```sh
-VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+CONVEX_DEPLOYMENT=dev:your-deployment-name
+VITE_CONVEX_URL=https://your-deployment-name.convex.cloud
+VITE_CONVEX_SITE_URL=https://your-deployment-name.convex.site
 ```
 
-These are used in `src/lib/supabase.ts` to create the Supabase client.
+These are used by the Convex client in `src/lib/convexClient.ts`.
 
-### 4. Database setup (Supabase)
+### 4. Database setup (Convex)
 
-In your Supabase SQL editor, run the migrations from the `migrations/` folder:
+The schema is defined in `convex/schema.ts`. Deploy the backend with:
 
-1. Either run `complete_setup.sql` to create everything at once, **or** run in order:
-   - `001_create_helpers.sql`
-   - `002_create_projects.sql`
-   - `003_create_certificates.sql`
-   - `004_create_contact_messages.sql`
-   - `005_create_analytics.sql`
-   - `006_create_storage_bucket.sql`
-   - `007_fix_storage_rls.sql`
-   - `009_create_work_experience.sql`
+```sh
+npx convex dev
+```
 
-These scripts create and configure:
+This creates and syncs all tables:
 
 - `projects` – Featured projects shown in **Featured Projects**.
 - `certificates` – Certificates shown in **Certificates & Achievements**.
@@ -81,7 +76,7 @@ These scripts create and configure:
 - `work_experience` – Entries for the **Work Experience** section.
 - Public `images` storage bucket for project / certificate images.
 
-> The admin app (`Jumawan_Portfolio-Admin`) expects the same schema and uses service‑style CRUD for these tables.
+> The admin app (`Jumawan_Portfolio-Admin`) shares the same Convex deployment.
 
 ### 5. Run the dev server
 
@@ -93,9 +88,10 @@ By default, Vite is configured to run on **http://localhost:8080** (see `vite.co
 
 ---
 
-## How this app talks to Supabase
+## How this app talks to Convex
 
-- Supabase client is defined in `src/lib/supabase.ts`.
+- Convex client is defined in `src/lib/convexClient.ts`.
+- Convex functions live in `convex/` (queries, mutations, HTTP actions).
 - Sections that read data:
   - Projects: `src/components/sections/projects-section.tsx` → `projects` table
   - Certificates: `src/components/sections/certificates-section-dynamic.tsx` → `certificates` table
@@ -111,15 +107,15 @@ These analytics are read on the admin side by `analytics.service.ts`.
 
 ## Relationship to the Admin App
 
-- **This project**: public portfolio UI only; no authentication; all data comes from Supabase.
-- **`Jumawan_Portfolio-Admin`**: separate Vite/React + Supabase project that:
+- **This project**: public portfolio UI only; no authentication; all data comes from Convex.
+- **`Jumawan_Portfolio-Admin`**: separate Vite/React + Convex project that:
   - Manages projects, certificates, work experience, and contact messages.
-  - Shows dashboard stats and analytics based on the same Supabase tables.
+  - Shows dashboard stats and analytics based on the same Convex tables.
 
 To see update flow end‑to‑end:
 
 1. Log into the admin app and create / edit projects, certificates, or work experience.
-2. Refresh this portfolio – the public sections will reflect the latest Supabase data.
+2. Refresh this portfolio – the public sections will reflect the latest Convex data.
 
 ---
 
@@ -134,9 +130,9 @@ npm run build
 ```
 
 2. Deploy the `dist/` folder to your platform of choice (Vercel, Netlify, Cloudflare Pages, etc.).
-3. Make sure the production environment has the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values as your local setup.
+3. Make sure the production environment has `VITE_CONVEX_URL` and `VITE_CONVEX_SITE_URL` set.
 
-Supabase database and storage stay the same for both local and production; only the frontend host changes.
+Convex backend stays the same for both local and production; only the frontend host changes.
 
 ---
 

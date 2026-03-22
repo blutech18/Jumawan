@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +15,9 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Award, Calendar, ExternalLink, X, Download, BadgeCheck, Building2, Trophy, Medal } from "lucide-react";
-import { Certificate } from "@/lib/supabase";
-import { safeSupabase } from "@/lib/supabase-safe";
-import { useCertificateStore } from "@/stores/useCertificateStore";
+import { useCertificateStore, Certificate } from "@/stores/useCertificateStore";
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../../convex/_generated/api';
 
 export function CertificatesSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -40,17 +39,13 @@ export function CertificatesSection() {
   }, [fetchCertificates, subscribeToChanges]);
 
   const trackPageView = async () => {
-    if (!safeSupabase.isAvailable()) return;
     try {
-      await safeSupabase.client!
-        .from('analytics')
-        .insert([{
-          event_type: 'page_view',
-          page_url: '/certificates',
-          event_data: { section: 'certificates' }
-        }]);
+      await convexClient.mutation(api.analytics.track, {
+        event_type: 'page_view',
+        page_url: '/certificates',
+        event_data: { section: 'certificates' },
+      });
     } catch (error) {
-      // Silently fail analytics - don't break the app
       console.warn('Analytics tracking error:', error);
     }
   };
@@ -70,11 +65,6 @@ export function CertificatesSection() {
   }, []);
 
 
-
-  const [ref, inView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
 
   const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
@@ -142,9 +132,9 @@ export function CertificatesSection() {
     <section id="certificates" className="py-24 relative overflow-hidden">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div
-          ref={ref}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.05 }}
           variants={containerVariants}
           className="max-w-6xl mx-auto"
         >

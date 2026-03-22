@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { safeSupabase } from '@/lib/supabase-safe';
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../convex/_generated/api';
 
 interface ContactFormData {
   name: string;
@@ -21,37 +22,24 @@ export const useContactStore = create<ContactState>((set) => ({
   resetStatus: () => set({ submitStatus: 'idle' }),
   submitMessage: async (formData: ContactFormData) => {
     set({ isSubmitting: true, submitStatus: 'idle' });
-    
-    if (!safeSupabase.isAvailable()) {
-      console.warn('Supabase not available, cannot submit form');
-      set({ submitStatus: 'error', isSubmitting: false });
-      return false;
-    }
 
     try {
-      const { error } = await safeSupabase.client!
-        .from('contact_messages')
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          status: 'unread'
-        }]);
-
-      if (error) throw error;
+      await convexClient.mutation(api.contactMessages.create, {
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        status: 'unread' as const,
+      });
       
-      // Also track analytics (non-blocking, don't fail if this fails)
+      // Also track analytics (non-blocking)
       try {
-        await safeSupabase.client!
-          .from('analytics')
-          .insert([{
-            event_type: 'contact_form_submission',
-            page_url: '/contact',
-            event_data: { subject: formData.subject }
-          }]);
+        await convexClient.mutation(api.analytics.track, {
+          event_type: 'contact_form_submission',
+          page_url: '/contact',
+          event_data: { subject: formData.subject },
+        });
       } catch (analyticsError) {
-        // Analytics failure shouldn't block form submission
         console.warn('Failed to track analytics:', analyticsError);
       }
 

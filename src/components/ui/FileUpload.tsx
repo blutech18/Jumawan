@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { convexClient } from '@/lib/convexClient'
+import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 
 interface FileUploadProps {
@@ -59,35 +60,32 @@ export const FileUpload = ({ onUpload, currentImage, folder, className }: FileUp
     try {
       setUploading(true)
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `${folder}/${fileName}`
+      // Get a short-lived upload URL from Convex
+      const uploadUrl = await convexClient.mutation(api.files.generateUploadUrl)
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
+      // Upload file to Convex storage
+      const result = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
 
-      if (uploadError) {
-        throw uploadError
+      if (!result.ok) {
+        throw new Error('Upload failed')
       }
 
-      // Get public URL
-      const { data } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath)
+      const { storageId } = await result.json()
 
-      if (data.publicUrl) {
-        onUpload(data.publicUrl)
-        toast({
-          title: 'Success',
-          description: 'Image uploaded successfully'
-        })
-      }
+      // Convex storage URLs are served via the deployment URL
+      const convexUrl = import.meta.env.VITE_CONVEX_URL as string
+      const siteUrl = convexUrl.replace('.cloud', '.site')
+      const publicUrl = `${siteUrl}/getImage?storageId=${storageId}`
+
+      onUpload(publicUrl)
+      toast({
+        title: 'Success',
+        description: 'Image uploaded successfully'
+      })
     } catch (error) {
       console.error('Upload error:', error)
       toast({

@@ -1,12 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import { Briefcase, Calendar, MapPin, ArrowRight, Globe, Clock, Star, Code } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { WorkExperience } from "@/lib/supabase";
-import { safeSupabase } from "@/lib/supabase-safe";
-import { useExperienceStore } from "@/stores/useExperienceStore";
+import { useExperienceStore, WorkExperience } from "@/stores/useExperienceStore";
+import { convexClient } from '@/lib/convexClient';
+import { api } from '../../../convex/_generated/api';
 import {
   Dialog,
   DialogContent,
@@ -17,10 +16,6 @@ import {
 
 
 export function ExperienceSection() {
-  const [ref, inView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
 
   const { experiences, loading, fetchExperiences } = useExperienceStore();
   const [selectedExp, setSelectedExp] = useState<WorkExperience | null>(null);
@@ -31,17 +26,13 @@ export function ExperienceSection() {
   }, [fetchExperiences]);
 
   const trackPageView = async () => {
-    if (!safeSupabase.isAvailable()) return;
     try {
-      await safeSupabase.client!
-        .from('analytics')
-        .insert([{
-          event_type: 'page_view',
-          page_url: '/experience',
-          event_data: { section: 'experience' }
-        }]);
+      await convexClient.mutation(api.analytics.track, {
+        event_type: 'page_view',
+        page_url: '/experience',
+        event_data: { section: 'experience' },
+      });
     } catch (error) {
-      // Silently fail analytics - don't break the app
       console.warn('Analytics tracking error:', error);
     }
   };
@@ -75,9 +66,9 @@ export function ExperienceSection() {
     <section id="experience" className="py-24 relative overflow-hidden">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div
-          ref={ref}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.05 }}
           variants={containerVariants}
           className="max-w-6xl mx-auto"
         >

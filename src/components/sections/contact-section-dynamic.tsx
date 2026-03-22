@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 import { cn } from "@/lib/utils";
-// Supabase import removed - using useContactStore instead
 
 interface FormData {
   name: string;

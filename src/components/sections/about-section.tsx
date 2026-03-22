@@ -1,38 +1,43 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-
-
-
+import { useAboutSectionStore, getAboutCarouselItems } from "@/stores/useAboutSectionStore";
 
 
 export function AboutSection() {
-    const { ref, inView } = useInView({
-        threshold: 0.1,
-        triggerOnce: true,
-    });
+    const { images, loading, fetchImages } = useAboutSectionStore();
+    const carouselItems = getAboutCarouselItems(images);
 
-    const containerVariants = {
+    useEffect(() => {
+        fetchImages();
+    }, [fetchImages]);
+
+    const containerVariants = useMemo(() => ({
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.15,
+                staggerChildren: 0.12,
+                delayChildren: 0.05,
             },
         },
-    };
+    }), []);
 
-    const itemVariants = {
-        hidden: { y: 30, opacity: 0 },
+    const itemVariants = useMemo(() => ({
+        hidden: { y: 40, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
-            transition: { type: "spring" as const, stiffness: 100, damping: 15 },
+            transition: {
+                duration: 0.6,
+                ease: [0.25, 0.46, 0.45, 0.94] as const,
+            },
         },
-    };
+    }), []);
+
 
     return (
         <section id="about" className="py-24 relative overflow-hidden">
@@ -40,9 +45,9 @@ export function AboutSection() {
 
             <div className="container px-4 md:px-6 relative z-10">
                 <motion.div
-                    ref={ref}
                     initial="hidden"
-                    animate={inView ? "visible" : "hidden"}
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.1 }}
                     variants={containerVariants}
                     className="max-w-6xl mx-auto"
                 >
@@ -62,38 +67,43 @@ export function AboutSection() {
 
                     <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
 
-                        {/* Left Column - Image/Carousel (Simpler) */}
+                        {/* Left Column - Image/Carousel (dynamic, responsive) */}
                         <motion.div variants={itemVariants} className="lg:col-span-5 relative group">
-                            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] shadow-2xl shadow-primary/5">
-                                <Carousel className="w-full h-full">
-                                    <CarouselContent className="-ml-0 h-full">
-                                        {[
-                                            { src: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80", label: "Development" },
-                                            { src: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=80", label: "Design" },
-                                            { src: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80", label: "Innovation" }
-                                        ].map((item, i) => (
-                                            <CarouselItem key={i} className="pl-0 h-full">
-                                                <div className="relative w-full h-full">
-                                                    <img
-                                                        src={item.src}
-                                                        alt={item.label}
-                                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                    />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                                                    <div className="absolute bottom-6 left-6">
-                                                        <span className="text-white/90 font-medium text-sm tracking-wider uppercase border-l-2 border-primary pl-3">
-                                                            {item.label}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </CarouselItem>
-                                        ))}
-                                    </CarouselContent>
-                                    <div className="absolute top-4 right-4 flex gap-2">
-                                        <CarouselPrevious className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
-                                        <CarouselNext className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
+                            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] min-h-[280px] sm:min-h-[320px] md:min-h-[360px] shadow-2xl shadow-primary/5 bg-muted/20">
+                                {loading && carouselItems.length === 0 ? (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="h-12 w-12 animate-pulse rounded-full bg-primary/20" aria-hidden />
                                     </div>
-                                </Carousel>
+                                ) : (
+                                    <Carousel className="w-full h-full">
+                                        <CarouselContent className="-ml-0 h-full">
+                                            {carouselItems.map((item) => (
+                                                <CarouselItem key={item.id} className="pl-0 h-full">
+                                                    <div className="relative w-full h-full">
+                                                        <img
+                                                            src={item.src}
+                                                            alt={item.label}
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 42vw"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                                                        <div className="absolute bottom-6 left-6">
+                                                            <span className="text-white/90 font-medium text-sm tracking-wider uppercase border-l-2 border-primary pl-3">
+                                                                {item.label}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </CarouselItem>
+                                            ))}
+                                        </CarouselContent>
+                                        <div className="absolute top-4 right-4 flex gap-2">
+                                            <CarouselPrevious className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
+                                            <CarouselNext className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
+                                        </div>
+                                    </Carousel>
+                                )}
                             </div>
 
                             {/* Decorative element behind image */}
