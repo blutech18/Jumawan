@@ -17,9 +17,22 @@ export function HeroSection() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const [animationsReady, setAnimationsReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Fetch dynamic hero settings
   const { badges, resumeUrl, profileImageUrl, fetchSettings } = useHeroSettingsStore();
+
+  // Detect mobile/tablet for performance optimization
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Only disable for very small mobile devices
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const dynamicPhrases = [
     "Crafting exceptional digital experiences that drive business growth and user engagement.",
@@ -35,23 +48,19 @@ export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
+    layoutEffect: false // Prevents warning during SSR/initial render
   });
 
-  // Scroll-based parallax transforms — using spring for smoother GPU-composited movement
-  const rawBackgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const rawAvatarY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const rawContentY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-
-  // Spring smoothing on the heaviest parallax values
-  const backgroundY = useSpring(rawBackgroundY, { stiffness: 80, damping: 25 });
-  const avatarY = useSpring(rawAvatarY, { stiffness: 80, damping: 25 });
-  const contentY = useSpring(rawContentY, { stiffness: 80, damping: 25 });
-
-  const avatarScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
-  const floatingElementsY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const nameX = useTransform(scrollYProgress, [0, 0.5], ["0%", "-5%"]);
+  // Scroll-based parallax transforms — direct transforms without spring for better performance
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
+  const avatarY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const avatarScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
+  const floatingElementsY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
+  const nameX = useTransform(scrollYProgress, [0, 0.5], ["0%", "-3%"]);
+  const fadeGradientOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7], [0, 0.8, 1]);
 
   useEffect(() => {
     let frameId: number | null = null;
@@ -104,6 +113,23 @@ export function HeroSection() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  // Delay heavy animations until after initial render
+  useEffect(() => {
+    // Use requestIdleCallback if available, otherwise setTimeout
+    const scheduleAnimations = () => {
+      // Longer delay on mobile for better initial load
+      const delay = isMobile ? 800 : 500;
+      
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => setAnimationsReady(true), { timeout: delay + 500 });
+      } else {
+        setTimeout(() => setAnimationsReady(true), delay);
+      }
+    };
+
+    scheduleAnimations();
+  }, [isMobile]);
 
   const scrollToProjects = () => {
     scrollToSection("projects");
@@ -169,7 +195,7 @@ export function HeroSection() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.12, delayChildren: 0.2 }
+      transition: { staggerChildren: 0.18, delayChildren: 0.3 }
     }
   };
 
@@ -177,7 +203,7 @@ export function HeroSection() {
     hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1, y: 0,
-      transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const }
+      transition: { duration: 1.05, ease: [0.25, 0.46, 0.45, 0.94] as const }
     }
   };
 
@@ -185,24 +211,35 @@ export function HeroSection() {
     hidden: { opacity: 0, scale: 0.95 },
     visible: {
       opacity: 1, scale: 1,
-      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }
+      transition: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] as const }
     }
   };
 
   return (
-    <section
+    <>
+      <style>{`
+        @keyframes spin-orbit {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+      <section
       ref={sectionRef}
       id="home"
       className="min-h-[100svh] flex flex-col relative overflow-hidden"
     >
       {/* Background with Mesh Gradient */}
       <motion.div
-        className="absolute inset-0 bg-[#020617]" // Darker base background
-        style={{ y: backgroundY }}
+        className="absolute inset-0 bg-[#020617]"
+        style={{ y: backgroundY, willChange: 'transform' }}
       >
-        <div className="absolute inset-0 bg-gradient-hero opacity-20" /> {/* Reduced opacity of original gradient */}
+        <div className="absolute inset-0 bg-gradient-hero opacity-20" />
         <div
-          className="absolute inset-0 opacity-40" // Increased opacity for visibility on dark bg
+          className="absolute inset-0 opacity-40"
           style={{
             backgroundImage: `
               radial-gradient(at 15% 25%, hsl(202 85% 55% / 0.15) 0%, transparent 55%),
@@ -213,7 +250,7 @@ export function HeroSection() {
         />
         {/* Subtle dot pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03]" // Slightly increased visibility
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)`,
             backgroundSize: '32px 32px'
@@ -222,21 +259,26 @@ export function HeroSection() {
       </motion.div>
 
       {/* Floating Background Elements with Parallax */}
+      {animationsReady && (
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{ y: floatingElementsY }}
+        style={{ y: floatingElementsY, willChange: 'transform' }}
       >
-        {/* Upper-left glowing ball removed */}
         <motion.div
           animate={shouldReduceMotion ? undefined : {
             x: [0, -80, 0],
             y: [0, 60, 0],
           }}
           transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-20 -right-20 w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[120px]"
-          style={{ background: 'hsl(197 100% 70%)' }}
+          className="absolute -bottom-20 -right-20 w-[500px] h-[500px] rounded-full opacity-[0.07]"
+          style={{ 
+            background: 'hsl(197 100% 70%)',
+            filter: 'blur(120px)',
+            willChange: 'transform'
+          }}
         />
       </motion.div>
+      )}
 
       {/* Main Content - 2 Column Layout */}
       <motion.div
@@ -251,7 +293,7 @@ export function HeroSection() {
               variants={stagger}
               initial="hidden"
               animate="visible"
-              className="text-center lg:text-left order-2 lg:order-1 will-change-transform"
+              className="text-center lg:text-left order-2 lg:order-1"
               style={{ y: contentY, willChange: 'transform' }}
             >
               {/* Typing Name */}
@@ -303,12 +345,12 @@ export function HeroSection() {
               {/* CTA Buttons - Enhanced sophisticated design */}
               <motion.div
                 variants={fadeUp}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center w-full sm:w-auto"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center lg:justify-start w-full sm:w-auto"
               >
                 <Button
                   onClick={scrollToProjects}
                   size="lg"
-                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-8 sm:px-10 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
+                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                   <ExternalLink className="h-4 w-4 mr-2.5 transition-transform group-hover:rotate-[-8deg] relative z-10" />
@@ -319,23 +361,27 @@ export function HeroSection() {
                   onClick={scrollToContact}
                   variant="outline"
                   size="lg"
-                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-8 sm:px-10 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
+                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                   <Mail className="h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 relative z-10" />
                   <span className="relative z-10">Contact Me</span>
                 </Button>
 
-                {/* Download Resume - Icon only (only show if resume exists) */}
+                {/* Download Resume - Responsive button (only show if resume exists) */}
                 {resumeUrl && (
-                  <button
+                  <Button
                     onClick={handleDownloadCV}
                     disabled={isDownloading}
-                    className="group flex items-center justify-center w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-primary/40 backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 disabled:opacity-50"
+                    variant="outline"
+                    size="lg"
+                    className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl disabled:opacity-50 w-full sm:w-auto overflow-hidden"
                     title="Download Resume"
                   >
-                    <Download className="h-[18px] w-[18px] text-foreground group-hover:text-white transition-colors duration-300" />
-                  </button>
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+                    <Download className="h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 relative z-10" />
+                    <span className="relative z-10">Download Resume</span>
+                  </Button>
                 )}
               </motion.div>
             </motion.div>
@@ -350,26 +396,28 @@ export function HeroSection() {
             >
               {/* Float animation wraps everything */}
               <motion.div
-                animate={shouldReduceMotion ? undefined : { y: [0, -12, 0] }}
+                animate={shouldReduceMotion || !animationsReady ? undefined : { y: [0, -12, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 className="relative w-[250px] h-[250px] sm:w-[288px] sm:h-[288px] md:w-[336px] md:h-[336px] lg:w-[384px] lg:h-[384px]"
               >
                 {/* Ambient glow - breathing */}
                 <motion.div
-                  animate={shouldReduceMotion ? undefined : {
-                    opacity: [0.7, 0.9, 0.7], // High opacity for strong effect
-                    scale: [1.1, 1.35, 1.1],
+                  animate={shouldReduceMotion || !animationsReady ? undefined : {
+                    opacity: [0.6, 0.8, 0.6],
+                    scale: [1.1, 1.25, 1.1],
                   }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-0 blur-[50px] sm:blur-[70px] rounded-full pointer-events-none"
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-full pointer-events-none"
                   style={{
-                    // Premium Blue Gradient: Electric Blue Core -> Royal Blue -> Deep Indigo -> Transparent
-                    background: 'radial-gradient(circle, hsl(210 100% 60% / 0.9), hsl(220 90% 55% / 0.7), hsl(230 80% 40% / 0.4), transparent 70%)',
-                    mixBlendMode: 'screen'
+                    background: 'radial-gradient(circle, hsl(210 100% 60% / 0.8), hsl(220 90% 55% / 0.6), hsl(230 80% 40% / 0.3), transparent 70%)',
+                    filter: 'blur(60px)',
+                    mixBlendMode: 'screen',
+                    willChange: animationsReady ? 'opacity, transform' : 'auto'
                   }}
                 />
 
                 {/* SVG Loading Rings & Effects */}
+                {animationsReady && (
                 <svg className="absolute -inset-6 sm:-inset-8 md:-inset-10 w-[calc(100%+48px)] h-[calc(100%+48px)] sm:w-[calc(100%+64px)] sm:h-[calc(100%+64px)] md:w-[calc(100%+80px)] md:h-[calc(100%+80px)]" viewBox="0 0 400 400">
                   <defs>
                     <linearGradient id="arcGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -401,9 +449,8 @@ export function HeroSection() {
                     strokeDasharray="320 900"
                     animate={shouldReduceMotion ? undefined : {
                       strokeDashoffset: [0, -1220],
-                      opacity: [0.9, 0.4, 0.9],
                     }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                   />
 
                   {/* Outer loading arc 2 - counter */}
@@ -417,22 +464,7 @@ export function HeroSection() {
                     animate={shouldReduceMotion ? undefined : {
                       strokeDashoffset: [1200, 0],
                     }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                  />
-
-                  {/* Third arc - fast short segment */}
-                  <motion.circle
-                    cx="200" cy="200" r="187"
-                    fill="none"
-                    stroke="hsl(197 100% 70%)"
-                    strokeWidth="0.8"
-                    strokeLinecap="round"
-                    strokeDasharray="60 1120"
-                    animate={shouldReduceMotion ? undefined : {
-                      strokeDashoffset: [0, -1180],
-                      opacity: [0.6, 0.2, 0.6],
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                   />
 
                   {/* Segmented progress ring */}
@@ -445,19 +477,18 @@ export function HeroSection() {
                     strokeDasharray="40 25 80 25 20 25"
                     animate={shouldReduceMotion ? undefined : {
                       strokeDashoffset: [0, -215],
-                      opacity: [0.5, 0.25, 0.5],
                     }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                   />
 
-                  {/* Tick marks - 48 ticks */}
-                  {[...Array(48)].map((_, i) => {
-                    const angle = (i * 7.5 * Math.PI) / 180;
+                  {/* Tick marks - reduced to 24 ticks for better performance */}
+                  {[...Array(24)].map((_, i) => {
+                    const angle = (i * 15 * Math.PI) / 180;
                     const r1 = 176;
-                    const isMajor = i % 4 === 0;
+                    const isMajor = i % 3 === 0;
                     const r2 = isMajor ? 171 : 173.5;
                     return (
-                      <motion.line
+                      <line
                         key={`tick-${i}`}
                         x1={200 + Math.cos(angle) * r1}
                         y1={200 + Math.sin(angle) * r1}
@@ -466,54 +497,39 @@ export function HeroSection() {
                         stroke={isMajor ? 'hsl(197 100% 70%)' : 'hsl(202 85% 55%)'}
                         strokeWidth={isMajor ? '1.2' : '0.4'}
                         strokeLinecap="round"
-                        animate={shouldReduceMotion ? undefined : {
-                          opacity: [0.06, isMajor ? 0.4 : 0.15, 0.06],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.06,
-                          ease: "easeInOut",
-                        }}
+                        opacity={isMajor ? 0.3 : 0.1}
                       />
                     );
                   })}
 
                   {/* Inner data ring - dotted */}
-                  <motion.circle
+                  <circle
                     cx="200" cy="200" r="167"
                     fill="none"
                     stroke="hsl(220 80% 60%)"
                     strokeWidth="0.5"
                     strokeDasharray="2 8"
-                    animate={shouldReduceMotion ? undefined : {
-                      strokeDashoffset: [0, 50],
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    opacity="0.2"
+                    opacity="0.15"
                   />
 
                 </svg>
+                )}
 
-                {/* Orbiting dots - 3 at different speeds */}
-                {[
-                  { start: 0, dur: 5, size: 7, color: 'hsl(197 100% 70%)', glow: 'hsl(197 100% 70% / 0.6)' },
-                  { start: 120, dur: 8, size: 5, color: 'hsl(220 80% 65%)', glow: 'hsl(220 80% 65% / 0.5)' },
-                  { start: 240, dur: 11, size: 4, color: 'hsl(260 70% 60%)', glow: 'hsl(260 70% 60% / 0.5)' },
+                {/* Orbiting dots - reduced to 2 for better performance */}
+                {animationsReady && [
+                  { delay: 0, dur: 6, size: 6, color: 'hsl(197 100% 70%)', glow: 'hsl(197 100% 70% / 0.5)' },
+                  { delay: 3, dur: 6, size: 5, color: 'hsl(220 80% 65%)', glow: 'hsl(220 80% 65% / 0.4)' },
                 ].map((dot, i) => (
-                  <motion.div
+                  <div
                     key={`orbit-dot-${i}`}
-                    animate={shouldReduceMotion ? undefined : { rotate: [dot.start, dot.start + 360] }}
-                    transition={{ duration: dot.dur, repeat: Infinity, ease: "linear" }}
                     className="absolute -inset-6 sm:-inset-8 md:-inset-10"
-                    style={{ transformOrigin: 'center center' }}
+                    style={{ 
+                      transformOrigin: 'center center',
+                      animation: shouldReduceMotion ? 'none' : `spin-orbit ${dot.dur}s linear infinite`,
+                      animationDelay: `${dot.delay}s`
+                    }}
                   >
-                    <motion.div
-                      animate={shouldReduceMotion ? undefined : {
-                        opacity: [0.5, 1, 0.5],
-                        scale: [0.8, 1.2, 0.8],
-                      }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    <div
                       className="absolute rounded-full"
                       style={{
                         width: `${dot.size}px`,
@@ -522,37 +538,39 @@ export function HeroSection() {
                         left: '50%',
                         transform: 'translateX(-50%)',
                         background: dot.color,
-                        boxShadow: `0 0 12px 4px ${dot.glow}, 0 0 24px 8px ${dot.glow.replace('0.6', '0.2').replace('0.5', '0.15')}`,
+                        boxShadow: `0 0 10px 3px ${dot.glow}`,
                       }}
                     />
-                  </motion.div>
+                  </div>
                 ))}
 
-                {/* Pulse rings that expand outward */}
-                {[0, 1, 2, 3].map((i) => (
+                {/* Pulse rings - reduced to 2 for better performance */}
+                {animationsReady && [0, 1].map((i) => (
                   <motion.div
                     key={`pulse-${i}`}
                     animate={shouldReduceMotion ? undefined : {
-                      scale: [1, 1.2],
-                      opacity: [0.18, 0],
+                      scale: [1, 1.15],
+                      opacity: [0.15, 0],
                     }}
                     transition={{
                       duration: 3,
                       repeat: Infinity,
-                      delay: i * 0.7,
+                      delay: i * 1.5,
                       ease: "easeOut",
                     }}
                     className="absolute inset-0 rounded-full border pointer-events-none"
                     style={{
-                      borderColor: ['hsl(202 85% 55% / 0.3)', 'hsl(197 100% 70% / 0.2)', 'hsl(260 70% 60% / 0.15)', 'hsl(220 80% 60% / 0.1)'][i],
+                      borderColor: ['hsl(202 85% 55% / 0.25)', 'hsl(197 100% 70% / 0.2)'][i],
+                      willChange: 'transform, opacity'
                     }}
                   />
                 ))}
 
                 {/* Primary comet-trail spinning border */}
+                {animationsReady && (
                 <motion.div
                   animate={shouldReduceMotion ? undefined : { rotate: [0, 360] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 rounded-full"
                   style={{
                     padding: '3px',
@@ -560,13 +578,16 @@ export function HeroSection() {
                     WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                     WebkitMaskComposite: 'xor',
                     maskComposite: 'exclude',
+                    willChange: 'transform'
                   }}
                 />
+                )}
 
                 {/* Counter-rotating accent border */}
+                {animationsReady && (
                 <motion.div
                   animate={shouldReduceMotion ? undefined : { rotate: [360, 0] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 rounded-full"
                   style={{
                     padding: '3px',
@@ -574,8 +595,10 @@ export function HeroSection() {
                     WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                     WebkitMaskComposite: 'xor',
                     maskComposite: 'exclude',
+                    willChange: 'transform'
                   }}
                 />
+                )}
 
                 {/* Photo - seamless against border */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden">
@@ -587,27 +610,31 @@ export function HeroSection() {
                     <motion.img
                       src={profileImageUrl}
                       alt="Cristan Jade Jumawan - Full Stack Developer"
-                      className="w-full h-full object-cover rounded-full will-change-transform"
+                      className="w-full h-full object-cover rounded-full"
                       loading="eager"
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       onError={() => setImageError(true)}
+                      style={{ willChange: 'transform' }}
                     />
                   )}
                 </div>
 
                 {/* Breathing outer glow */}
+                {animationsReady && (
                 <motion.div
                   animate={shouldReduceMotion ? undefined : {
                     boxShadow: [
                       '0 0 20px 2px hsl(202 85% 55% / 0.08), 0 0 50px 6px hsl(202 85% 55% / 0.04)',
-                      '0 0 40px 8px hsl(197 100% 70% / 0.2), 0 0 80px 14px hsl(260 70% 60% / 0.06)',
+                      '0 0 35px 6px hsl(197 100% 70% / 0.15), 0 0 70px 12px hsl(260 70% 60% / 0.05)',
                       '0 0 20px 2px hsl(202 85% 55% / 0.08), 0 0 50px 6px hsl(202 85% 55% / 0.04)',
                     ],
                   }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{ willChange: 'box-shadow' }}
                 />
+                )}
               </motion.div>
             </motion.div>
           </div>
@@ -637,12 +664,15 @@ export function HeroSection() {
       </motion.div>
 
       {/* Bottom fade gradient for smooth transition to about section */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32 sm:h-48 pointer-events-none z-20"
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-40 sm:h-56 pointer-events-none z-20"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, #030014 100%)'
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(3, 0, 20, 0.6) 40%, #030014 100%)',
+          opacity: fadeGradientOpacity,
+          willChange: 'opacity'
         }}
       />
     </section>
+    </>
   );
 }

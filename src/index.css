@@ -97,6 +97,9 @@ All colors MUST be HSL.
     /* Firefox */
     -ms-overflow-style: none !important;
     /* IE/Edge */
+    /* Mobile optimizations */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-y;
   }
 
   h1,
@@ -168,12 +171,45 @@ All colors MUST be HSL.
     will-change: transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   .gpu-layer {
     transform: translateZ(0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+  }
+
+  /* Optimize SVG rendering */
+  svg {
+    shape-rendering: geometricPrecision;
+  }
+
+  /* Optimize motion elements */
+  [data-framer-component-type] {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 1023px) {
+    /* Simplify transforms on mobile */
+    [style*="transform"] {
+      transform: translateZ(0) !important;
+    }
+
+    /* Reduce blur effects on mobile for better performance */
+    [style*="blur"] {
+      filter: blur(30px) !important;
+    }
+
+    /* Ensure carousel buttons are tappable on mobile */
+    button[role="button"] {
+      min-width: 44px;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
   }
 
   /* Enable momentum scrolling on iOS */
@@ -191,6 +227,7 @@ All colors MUST be HSL.
   [style*="transform"] {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   /* Smooth section transition styles */

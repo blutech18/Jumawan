@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useAboutSectionStore, getAboutCarouselItems } from "@/stores/useAboutSectionStore";
 
 
@@ -20,19 +20,19 @@ export function AboutSection() {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.12,
-                delayChildren: 0.05,
+                staggerChildren: 0.225,
+                delayChildren: 0.3,
             },
         },
     }), []);
 
     const itemVariants = useMemo(() => ({
-        hidden: { y: 40, opacity: 0 },
+        hidden: { y: 30, opacity: 0 },
         visible: {
             y: 0,
             opacity: 1,
             transition: {
-                duration: 0.6,
+                duration: 1.2,
                 ease: [0.25, 0.46, 0.45, 0.94] as const,
             },
         },
@@ -40,14 +40,12 @@ export function AboutSection() {
 
 
     return (
-        <section id="about" className="py-24 relative overflow-hidden">
-
-
+        <section id="about" className="py-24 relative overflow-hidden" style={{ paddingTop: '6rem' }}>
             <div className="container px-4 md:px-6 relative z-10">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, amount: 0.1 }}
+                    viewport={{ once: true, amount: 0.15, margin: "0px 0px -100px 0px" }}
                     variants={containerVariants}
                     className="max-w-6xl mx-auto"
                 >
@@ -75,7 +73,14 @@ export function AboutSection() {
                                         <div className="h-12 w-12 animate-pulse rounded-full bg-primary/20" aria-hidden />
                                     </div>
                                 ) : (
-                                    <Carousel className="w-full h-full">
+                                    <Carousel 
+                                        className="w-full h-full"
+                                        opts={{
+                                            align: "start",
+                                            loop: true,
+                                            dragFree: true,
+                                        }}
+                                    >
                                         <CarouselContent className="-ml-0 h-full">
                                             {carouselItems.map((item) => (
                                                 <CarouselItem key={item.id} className="pl-0 h-full">
@@ -98,10 +103,6 @@ export function AboutSection() {
                                                 </CarouselItem>
                                             ))}
                                         </CarouselContent>
-                                        <div className="absolute top-4 right-4 flex gap-2">
-                                            <CarouselPrevious className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
-                                            <CarouselNext className="static translate-y-0 h-8 w-8 bg-black/20 hover:bg-black/40 border-none text-white" />
-                                        </div>
                                     </Carousel>
                                 )}
                             </div>
@@ -112,7 +113,7 @@ export function AboutSection() {
 
                         {/* Right Column - Text & Content */}
                         <motion.div variants={itemVariants} className="lg:col-span-7 flex flex-col justify-center">
-                            <div className="prose prose-invert max-w-none text-base md:text-lg leading-relaxed text-muted-foreground/90 space-y-8">
+                            <div className="prose prose-invert max-w-none text-base md:text-lg leading-relaxed text-muted-foreground/90 space-y-8 text-center lg:text-left">
                                 <div>
                                     <p>
                                         I'm a <span className="text-foreground font-semibold">Full Stack Developer</span> and <span className="text-foreground font-semibold">BSIT Graduate</span> from Liceo de Cagayan University. I bridge the gap between user needs and technical implementation by building accessible, pixel-perfect user interfaces that blend art with code, rooted in clean architecture and performance optimization.
@@ -120,15 +121,15 @@ export function AboutSection() {
                                 </div>
 
                                 <div>
-                                    <div className="grid grid-cols-[70%_30%] gap-4 sm:gap-6 items-center">
-                                        <div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-center">
+                                        <div className="text-center sm:text-left">
                                             <h3 className="text-foreground font-bold text-xl mb-3">Blutech</h3>
                                             <p>
                                                 Operating under <strong>Blutech</strong>, I accept commissions and freelance projects, expanding my expertise beyond personal work to deliver tailored freelance solutions for clients.
                                             </p>
                                         </div>
-                                        <div className="flex justify-end lg:justify-center">
-                                            <img src="/blutech2.png" alt="Blutech Logo" className="w-full max-w-[120px] h-auto object-contain" />
+                                        <div className="flex justify-center sm:justify-end sm:pl-6">
+                                            <img src="/blutech2.png" alt="Blutech Logo" className="w-full max-w-[140px] sm:max-w-[120px] h-auto object-contain" />
                                         </div>
                                     </div>
                                 </div>

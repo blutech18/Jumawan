@@ -10,32 +10,42 @@ import { ProjectsSection } from "@/components/sections/projects-section";
 import { ContactSection } from "@/components/sections/contact-section-dynamic";
 import { Footer } from "@/components/sections/footer";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import "@/styles/galaxy-background.css";
 
 
 const Portfolio = () => {
   const galaxyRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile for performance optimization
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: galaxyRef,
-    offset: ["start start", "end end"]
+    offset: ["start start", "end end"],
+    layoutEffect: false // Prevents warning during SSR/initial render
   });
 
   // Spring-smoothed scroll progress — prevents choppy jumps on fast scroll
   const smoothScroll = useSpring(scrollYProgress, {
-    stiffness: 60,
-    damping: 30,
-    restDelta: 0.0005,
+    stiffness: isMobile ? 60 : 60,
+    damping: isMobile ? 30 : 30,
+    restDelta: 0.001,
   });
 
-  // Scroll-based parallax transforms for star layers (reduced distances for smoother feel)
-  const starsLayer1Y = useTransform(smoothScroll, [0, 1], ["0%", "12%"]);
-  const starsLayer2Y = useTransform(smoothScroll, [0, 1], ["0%", "22%"]);
-  const starsLayer3Y = useTransform(smoothScroll, [0, 1], ["0%", "32%"]);
+  // Scroll-based parallax transforms for star layers (slightly reduced on mobile for performance)
+  const starsLayer1Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "8%"] : ["0%", "10%"]);
+  const starsLayer2Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "15%"] : ["0%", "18%"]);
+  const starsLayer3Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "24%"] : ["0%", "28%"]);
 
-  // Nebula parallax (slower movement for depth)
-  const nebulaY = useTransform(smoothScroll, [0, 1], ["0%", "10%"]);
+  // Nebula parallax (slower movement for depth and smoothness)
+  const nebulaY = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "6%"] : ["0%", "8%"]);
 
   return (
     <div className="min-h-screen bg-[#030014] text-foreground">

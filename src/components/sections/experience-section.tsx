@@ -48,7 +48,7 @@ export function ExperienceSection() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.15,
       },
     },
   }), []);
@@ -58,7 +58,7 @@ export function ExperienceSection() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring" as const, stiffness: 100, damping: 15 },
+      transition: { type: "spring" as const, stiffness: 80, damping: 12 },
     },
   }), []);
 
@@ -135,9 +135,10 @@ export function ExperienceSection() {
                                     <span>{exp.location}</span>
                                   </div>
                                   <span className="hidden sm:inline w-1 h-1 rounded-full bg-white/20" />
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 tracking-wide uppercase">
-                                    {exp.type}
-                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Briefcase className="h-4 w-4 text-primary/60" />
+                                    <span>{exp.type}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>

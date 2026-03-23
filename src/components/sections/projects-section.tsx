@@ -94,8 +94,8 @@ export function ProjectsSection() {
       visible: {
         opacity: 1,
         transition: {
-          duration: 0.4,
-          staggerChildren: shouldReduceMotion ? 0 : 0.12,
+          duration: 0.6,
+          staggerChildren: shouldReduceMotion ? 0 : 0.18,
         },
       },
     }),
@@ -114,7 +114,7 @@ export function ProjectsSection() {
         y: 0,
         scale: 1,
         transition: {
-          duration: shouldReduceMotion ? 0.3 : 0.5,
+          duration: shouldReduceMotion ? 0.45 : 0.75,
           ease: [0.4, 0, 0.2, 1] as const,
         },
       },

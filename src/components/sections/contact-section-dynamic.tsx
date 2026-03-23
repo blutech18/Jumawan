@@ -155,7 +155,7 @@ export function ContactSection() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.9 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
@@ -175,7 +175,7 @@ export function ContactSection() {
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 1.2 }}
                 viewport={{ once: true }}
                 className="lg:col-span-7 relative z-10"
               >

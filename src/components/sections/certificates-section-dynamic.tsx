@@ -71,8 +71,8 @@ export function CertificatesSection() {
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.4,
-        staggerChildren: shouldReduceMotion ? 0 : 0.12,
+        duration: 0.6,
+        staggerChildren: shouldReduceMotion ? 0 : 0.18,
       },
     },
   }), [shouldReduceMotion]);
@@ -82,7 +82,7 @@ export function CertificatesSection() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring" as const, stiffness: 100, damping: 15 },
+      transition: { type: "spring" as const, stiffness: 80, damping: 12 },
     },
   }), []);
 

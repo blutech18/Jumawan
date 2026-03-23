@@ -90,13 +90,13 @@ export function Navigation() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         isScrolled
-          ? "bg-[#021021]/80 backdrop-blur-md shadow-lg"
-          : "bg-transparent py-4"
+          ? "bg-[#021021]/80 backdrop-blur-md shadow-lg py-2"
+          : "bg-transparent py-3 sm:py-4"
       )}
       style={{ transform: "translateZ(0)", willChange: "transform" }}
     >
-      <nav className="container mx-auto px-6 py-0">
-        <div className="flex items-center justify-between">
+      <nav className="container mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-auto">
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -106,7 +106,7 @@ export function Navigation() {
             <img
               src="/cjj logo.png"
               alt="@cjj logo"
-              className="block h-12 md:h-16 w-auto object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.65)] transition duration-300 group-hover:drop-shadow-[0_0_18px_rgba(59,130,246,0.9)] group-hover:brightness-110"
+              className="block h-10 sm:h-12 md:h-16 w-auto object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.65)] transition duration-300 group-hover:drop-shadow-[0_0_18px_rgba(59,130,246,0.9)] group-hover:brightness-110"
               draggable={false}
               loading="lazy"
               decoding="async"
@@ -174,24 +174,86 @@ export function Navigation() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-navy-900/95 backdrop-blur-md border-t border-white/10 overflow-hidden"
+            transition={{ 
+              duration: 0.4,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.3 }
+            }}
+            className="md:hidden bg-[#021021]/95 backdrop-blur-md border-t border-white/10 overflow-hidden"
           >
-            <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => scrollToSection(item.href)}
-                  className={cn(
-                    "text-left py-2 text-base font-medium transition-colors hover:text-primary",
-                    activeSection === item.href.substring(1)
-                      ? "text-primary"
-                      : "text-foreground/80"
-                  )}
+            <motion.div 
+              className="container mx-auto px-4 sm:px-6 py-6"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ 
+                duration: 0.3,
+                delay: 0.1,
+                ease: [0.4, 0, 0.2, 1]
+              }}
+            >
+              {/* Navigation Links and Social Icons in Row */}
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                {navigationItems.map((item, index) => (
+                  <motion.button
+                    key={item.name}
+                    onClick={() => scrollToSection(item.href)}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ 
+                      duration: 0.3,
+                      delay: 0.1 + (index * 0.05),
+                      ease: [0.4, 0, 0.2, 1]
+                    }}
+                    className={cn(
+                      "px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border flex items-center justify-center",
+                      activeSection === item.href.substring(1)
+                        ? "text-primary border-primary/40 bg-primary/10"
+                        : "text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5"
+                    )}
+                  >
+                    {item.name}
+                  </motion.button>
+                ))}
+
+                {/* Social Icons as buttons with same style and height */}
+                <motion.a
+                  href="https://github.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ 
+                    duration: 0.3,
+                    delay: 0.1 + (navigationItems.length * 0.05),
+                    ease: [0.4, 0, 0.2, 1]
+                  }}
+                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5 flex items-center justify-center"
                 >
-                  {item.name}
-                </button>
-              ))}
-            </div>
+                  <Github className="h-4 w-4" />
+                </motion.a>
+                <motion.a
+                  href="https://www.linkedin.com/in/cristan-jade-jumawan-45b27b39b"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ 
+                    duration: 0.3,
+                    delay: 0.1 + ((navigationItems.length + 1) * 0.05),
+                    ease: [0.4, 0, 0.2, 1]
+                  }}
+                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5 flex items-center justify-center"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </motion.a>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

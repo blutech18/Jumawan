@@ -14,8 +14,8 @@ export function EducationSection() {
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.4,
-        staggerChildren: 0.12,
+        duration: 0.6,
+        staggerChildren: 0.18,
       },
     },
   }), []);
@@ -26,7 +26,7 @@ export function EducationSection() {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.75,
         ease: [0.4, 0, 0.2, 1] as const,
       },
     },

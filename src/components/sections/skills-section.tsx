@@ -18,8 +18,8 @@ export function SkillsSection() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.05,
+        staggerChildren: 0.15,
+        delayChildren: 0.075,
       },
     },
   }), []);
@@ -30,7 +30,7 @@ export function SkillsSection() {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.5,
+        duration: 0.75,
         ease: [0.25, 0.46, 0.45, 0.94] as const,
       },
     },
@@ -66,7 +66,7 @@ export function SkillsSection() {
                 <div className="p-6 h-full border border-border/50 rounded-xl transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
                   <div className="space-y-6">
                     {/* Category Header */}
-                    <div className="flex items-center gap-3 border-b border-border/50 pb-3">
+                    <div className="flex items-center justify-center md:justify-start gap-3 border-b border-border/50 pb-3">
                       <category.icon className={`h-5 w-5 ${category.color}`} />
                       <h3 className="text-xl font-semibold text-foreground tracking-tight">
                         {category.title}
@@ -74,7 +74,7 @@ export function SkillsSection() {
                     </div>
 
                     {/* Skills Tags */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                       {category.skills.map((skill, skillIndex) => (
                         <motion.span
                           key={skill}
@@ -94,7 +94,7 @@ export function SkillsSection() {
           {/* Bottom CTA */}
           <motion.div
             variants={itemVariants}
-            className="mt-20 flex flex-col sm:flex-row items-center justify-between gap-6"
+            className="mt-20 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-6 text-center sm:text-left"
           >
             <p className="text-muted-foreground text-lg">
               Ready to deploy these technologies on your next project?

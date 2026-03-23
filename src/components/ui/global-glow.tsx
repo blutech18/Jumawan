@@ -13,7 +13,7 @@ export const GlobalGlow = () => {
     const [y, setY] = useState(100);
 
     useEffect(() => {
-        return scrollY.onChange((latest) => {
+        const unsubscribe = scrollY.on("change", (latest) => {
             const vh = window.innerHeight;
             // Start fading in after 50% of the viewport height (mid-Hero)
             // Fully visible by 100% of viewport (start of About)
@@ -32,6 +32,8 @@ export const GlobalGlow = () => {
                 setY(100 - (progress * 100));
             }
         });
+        
+        return () => unsubscribe();
     }, [scrollY]);
 
     if (!mounted) return null;
