@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Portfolio Dark Navy Theme */
+    /* Portfolio Dark Navy Theme (default) */
     --background: 249 100% 4%;
     /* #030014 */
     --foreground: 210 40% 98%;
@@ -60,6 +60,27 @@ All colors MUST be HSL.
     --sky-300: 198 93% 80%;
     /* Light accents */
 
+    /* Theme-aware surface colors */
+    --surface-bg: #030014;
+    --surface-bg-alt: #010626;
+    --surface-modal: #000212;
+    --surface-nav: #021021;
+    --overlay-bg: rgba(0, 0, 0, 0.8);
+    --overlay-light: rgba(0, 0, 0, 0.5);
+    --star-color: rgba(255, 255, 255, 0.7);
+    --star-color-dim: rgba(255, 255, 255, 0.4);
+    --star-color-bright: rgba(255, 255, 255, 0.8);
+    --nebula-blue: rgba(30, 64, 175, 0.4);
+    --nebula-purple: rgba(88, 28, 135, 0.35);
+    --nebula-indigo: rgba(49, 46, 129, 0.4);
+    --nebula-teal: rgba(22, 78, 99, 0.3);
+    --card-overlay-from: rgba(0, 0, 0, 0.7);
+    --card-overlay-via: rgba(0, 0, 0, 0.1);
+    --text-on-overlay: rgba(255, 255, 255, 0.7);
+    --text-on-overlay-hover: rgba(255, 255, 255, 1);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-subtle-hover: rgba(255, 255, 255, 0.1);
+
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(227 100% 10%) 0%, hsl(260 100% 4%) 50%, #030014 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--navy-800)), hsl(var(--navy-700)));
@@ -74,9 +95,120 @@ All colors MUST be HSL.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Avatar animation colors */
+    --avatar-glow-1: hsl(210 100% 60% / 0.8);
+    --avatar-glow-2: hsl(220 90% 55% / 0.6);
+    --avatar-glow-3: hsl(230 80% 40% / 0.3);
+    --avatar-comet: conic-gradient(from 0deg, transparent 0%, transparent 20%, hsl(260 70% 60% / 0.08) 30%, hsl(202 85% 55% / 0.15) 45%, hsl(197 100% 70% / 0.5) 60%, hsl(202 85% 55%) 75%, hsl(197 100% 70%) 88%, hsl(260 70% 60% / 0.6) 95%, transparent 100%);
+    --avatar-comet-accent: conic-gradient(from 180deg, transparent 0%, transparent 70%, hsl(260 70% 60% / 0.2) 80%, hsl(220 80% 60% / 0.35) 90%, transparent 100%);
+    --avatar-dot-1: hsl(197 100% 70%);
+    --avatar-dot-1-glow: hsl(197 100% 70% / 0.5);
+    --avatar-dot-2: hsl(220 80% 65%);
+    --avatar-dot-2-glow: hsl(220 80% 65% / 0.4);
+    --avatar-pulse-1: hsl(202 85% 55% / 0.25);
+    --avatar-pulse-2: hsl(197 100% 70% / 0.2);
+    --avatar-shadow-1: 0 0 20px 2px hsl(202 85% 55% / 0.08), 0 0 50px 6px hsl(202 85% 55% / 0.04);
+    --avatar-shadow-2: 0 0 35px 6px hsl(197 100% 70% / 0.15), 0 0 70px 12px hsl(260 70% 60% / 0.05);
+
+    /* Tools carousel colors */
+    --marquee-border: rgba(6, 182, 212, 0.15);
+    --pulse-shadow: 0 0 20px 4px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.4);
+    --laser-mid: rgba(56, 189, 248, 0.3);
+    --laser-tip: rgba(34, 211, 238, 0.9);
   }
 
-  /* Dark theme is the default for this portfolio */
+  /* Light theme */
+  .light {
+    --background: 220 20% 97%;
+    --foreground: 224 71% 10%;
+
+    --card: 220 20% 94%;
+    --card-foreground: 224 71% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 10%;
+
+    --primary: 202 85% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 224 71% 10%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 202 85% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 187 70% 65%;
+    --input: 187 70% 65%;
+    --ring: 217 85% 55%;
+
+    --navy-900: 220 20% 94%;
+    --navy-800: 220 20% 96%;
+    --navy-700: 220 14% 90%;
+    --blue-600: 202 85% 45%;
+    --sky-400: 202 85% 45%;
+    --sky-300: 202 80% 55%;
+
+    --surface-bg: #f5f7fa;
+    --surface-bg-alt: #eef1f6;
+    --surface-modal: #ffffff;
+    --surface-nav: #f5f7fa;
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+    --overlay-light: rgba(0, 0, 0, 0.2);
+    --star-color: rgba(0, 0, 0, 0.12);
+    --star-color-dim: rgba(0, 0, 0, 0.06);
+    --star-color-bright: rgba(0, 0, 0, 0.15);
+    --nebula-blue: rgba(59, 130, 246, 0.08);
+    --nebula-purple: rgba(139, 92, 246, 0.06);
+    --nebula-indigo: rgba(99, 102, 241, 0.08);
+    --nebula-teal: rgba(20, 184, 166, 0.06);
+    --card-overlay-from: rgba(0, 0, 0, 0.5);
+    --card-overlay-via: rgba(0, 0, 0, 0.05);
+    --text-on-overlay: rgba(255, 255, 255, 0.8);
+    --text-on-overlay-hover: rgba(255, 255, 255, 1);
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-subtle-hover: rgba(0, 0, 0, 0.1);
+
+    /* Light mode: remap cyan accents to blue for hover contrast */
+    --cyan-accent: 217 85% 55%;
+    --cyan-accent-hex: #3b6fe0;
+
+    /* Avatar animation colors — blue in light mode */
+    --avatar-glow-1: hsl(217 85% 55% / 0.6);
+    --avatar-glow-2: hsl(225 80% 50% / 0.4);
+    --avatar-glow-3: hsl(230 70% 45% / 0.2);
+    --avatar-comet: conic-gradient(from 0deg, transparent 0%, transparent 20%, hsl(230 70% 55% / 0.08) 30%, hsl(217 85% 55% / 0.15) 45%, hsl(217 85% 55% / 0.5) 60%, hsl(217 85% 55%) 75%, hsl(225 80% 50%) 88%, hsl(230 70% 55% / 0.6) 95%, transparent 100%);
+    --avatar-comet-accent: conic-gradient(from 180deg, transparent 0%, transparent 70%, hsl(230 70% 55% / 0.2) 80%, hsl(217 85% 55% / 0.35) 90%, transparent 100%);
+    --avatar-dot-1: hsl(217 85% 55%);
+    --avatar-dot-1-glow: hsl(217 85% 55% / 0.5);
+    --avatar-dot-2: hsl(225 80% 60%);
+    --avatar-dot-2-glow: hsl(225 80% 60% / 0.4);
+    --avatar-pulse-1: hsl(217 85% 55% / 0.25);
+    --avatar-pulse-2: hsl(225 80% 50% / 0.2);
+    --avatar-shadow-1: 0 0 20px 2px hsl(217 85% 55% / 0.08), 0 0 50px 6px hsl(217 85% 55% / 0.04);
+    --avatar-shadow-2: 0 0 35px 6px hsl(225 80% 50% / 0.15), 0 0 70px 12px hsl(230 70% 55% / 0.05);
+
+    /* Tools carousel colors — blue in light mode */
+    --marquee-border: hsl(187 70% 65% / 0.3);
+    --pulse-shadow: 0 0 20px 4px hsl(217 85% 55% / 0.5), inset 0 0 20px hsl(217 85% 55% / 0.3);
+    --laser-mid: hsl(217 85% 55% / 0.3);
+    --laser-tip: hsl(217 85% 55% / 0.8);
+
+    --gradient-hero: linear-gradient(180deg, hsl(220 20% 97%) 0%, hsl(220 25% 95%) 50%, #f5f7fa 100%);
+    --gradient-card: linear-gradient(145deg, hsl(var(--navy-800)), hsl(var(--navy-700)));
+    --gradient-border: linear-gradient(135deg, hsl(var(--sky-400)), hsl(var(--blue-600)));
+    --gradient-glow: radial-gradient(circle at center, hsl(var(--sky-400) / 0.1), transparent 70%);
+
+    --shadow-elegant: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 20px hsl(var(--sky-400) / 0.15);
+    --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+  }
 }
 
 @layer base {
@@ -101,6 +233,8 @@ All colors MUST be HSL.
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
+    /* Smooth theme transitions */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1,
@@ -213,10 +347,7 @@ All colors MUST be HSL.
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Smooth section transition styles */
-  section {
-    transition: opacity 0.3s, transform 0.3s;
-  }
+  /* Smooth section transition styles — only for theme changes, not scroll */
 
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
@@ -244,17 +375,262 @@ All colors MUST be HSL.
   }
 }
 
-/* Force pure fade on all modal/dialog/sheet content — no slide, no zoom */
-/* Must be outside @layer to have highest specificity */
-[role="dialog"],
-[data-radix-dialog-content],
-[data-radix-alert-dialog-content],
-[data-state="open"][role="dialog"],
-[data-state="closed"][role="dialog"] {
-  --tw-enter-translate-x: 0 !important;
-  --tw-enter-translate-y: 0 !important;
-  --tw-exit-translate-x: 0 !important;
-  --tw-exit-translate-y: 0 !important;
-  --tw-enter-scale: 1 !important;
-  --tw-exit-scale: 1 !important;
+/* Custom modal animations — bypasses tailwindcss-animate entirely */
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modal-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes modal-content-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes modal-content-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+}
+
+/* Light mode: remap cyan accents to blue */
+.light .text-cyan-400 {
+  color: hsl(217 85% 55%) !important;
+}
+.light .hover\:text-cyan-400:hover {
+  color: hsl(217 85% 55%) !important;
+}
+.light .border-cyan-400 {
+  border-color: hsl(217 85% 55%) !important;
+}
+.light .hover\:border-cyan-400:hover {
+  border-color: hsl(217 85% 55%) !important;
+}
+.light .hover\:border-cyan-400\/40:hover {
+  border-color: hsl(217 85% 55% / 0.4) !important;
+}
+.light .hover\:border-cyan-400\/50:hover {
+  border-color: hsl(217 85% 55% / 0.5) !important;
+}
+.light .bg-cyan-400 {
+  background-color: hsl(217 85% 55%) !important;
+}
+.light .hover\:bg-cyan-400\/5:hover {
+  background-color: hsl(217 85% 55% / 0.05) !important;
+}
+.light .ring-cyan-500\/20 {
+  --tw-ring-color: hsl(217 85% 55% / 0.2) !important;
+}
+.light .hover\:shadow-\[0_0_10px_rgba\(34\,211\,238\,0\.1\)\]:hover {
+  box-shadow: 0 0 10px rgba(59, 111, 224, 0.15) !important;
+}
+.light .hover\:shadow-\[0_0_8px_rgba\(34\,211\,238\,0\.1\)\]:hover {
+  box-shadow: 0 0 8px rgba(59, 111, 224, 0.15) !important;
+}
+.light .border-cyan-500\/30 {
+  border-color: hsl(217 85% 55% / 0.3) !important;
+}
+.light .via-cyan-400\/50 {
+  --tw-gradient-via: hsl(217 85% 55% / 0.5) !important;
+}
+
+/* Light mode: make text-white dark where it's used as body/heading text (not on image overlays) */
+.light .text-white {
+  color: hsl(224 71% 10%) !important;
+}
+.light .text-white\/90 {
+  color: hsl(224 71% 10% / 0.9) !important;
+}
+.light .text-white\/80 {
+  color: hsl(224 71% 10% / 0.8) !important;
+}
+.light .text-white\/10 {
+  color: hsl(224 71% 10% / 0.15) !important;
+}
+.light .hover\:text-white:hover {
+  color: hsl(224 71% 10%) !important;
+}
+.light .group-hover\:text-white:is(:where(.group):hover *) {
+  color: hsl(224 71% 10%) !important;
+}
+
+/* Light mode: preserve white text on image overlays (modal headers over dark backgrounds) */
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] .text-white\/90,
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] .text-white {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] [class*="text-on-overlay"] {
+  color: var(--text-on-overlay) !important;
+}
+
+/* Light mode: darken hero name gradient and boost muted text contrast */
+.light .bg-clip-text.text-transparent {
+  --tw-gradient-from: hsl(217 85% 45%);
+  --tw-gradient-to: hsl(202 85% 35%);
+  --tw-gradient-stops: var(--tw-gradient-from), hsl(210 90% 40%), var(--tw-gradient-to);
+}
+.light .text-muted-foreground\/70 {
+  color: hsl(220 15% 30%) !important;
+}
+.light .text-muted-foreground\/90 {
+  color: hsl(220 15% 20%) !important;
+}
+.light .text-muted-foreground\/80 {
+  color: hsl(220 15% 25%) !important;
+}
+.light .text-muted-foreground\/60 {
+  color: hsl(220 10% 40%) !important;
+}
+.light .text-muted-foreground\/50 {
+  color: hsl(220 10% 45%) !important;
+}
+.light .text-muted-foreground\/30 {
+  color: hsl(220 10% 60%) !important;
+}
+.light .text-foreground\/80 {
+  color: hsl(224 71% 10% / 0.85) !important;
+}
+.light .text-foreground\/90 {
+  color: hsl(224 71% 10% / 0.92) !important;
+}
+
+/* Light mode: boost badge border visibility and remap primary hover to blue */
+.light .border-border\/10 {
+  border-color: hsl(187 70% 65% / 0.4) !important;
+}
+.light .border-border\/20 {
+  border-color: hsl(187 70% 65% / 0.5) !important;
+}
+.light .border-border\/50 {
+  border-color: hsl(187 70% 65% / 0.6) !important;
+}
+.light .hover\:border-primary\/20:hover {
+  border-color: hsl(217 85% 55% / 0.4) !important;
+}
+.light .hover\:border-primary\/30:hover {
+  border-color: hsl(217 85% 55% / 0.5) !important;
+}
+.light .hover\:border-primary\/40:hover {
+  border-color: hsl(217 85% 55% / 0.6) !important;
+}
+.light .hover\:text-primary:hover {
+  color: hsl(217 85% 55%) !important;
+}
+.light .text-primary {
+  color: hsl(217 85% 55%) !important;
+}
+.light .text-primary\/60 {
+  color: hsl(217 85% 55% / 0.6) !important;
+}
+.light .text-primary\/50 {
+  color: hsl(217 85% 55% / 0.5) !important;
+}
+.light .bg-primary\/10 {
+  background-color: hsl(217 85% 55% / 0.1) !important;
+}
+.light .bg-primary\/5 {
+  background-color: hsl(217 85% 55% / 0.05) !important;
+}
+.light .hover\:bg-primary\/5:hover {
+  background-color: hsl(217 85% 55% / 0.08) !important;
+}
+.light .hover\:bg-muted\/10:hover {
+  background-color: hsl(217 85% 55% / 0.06) !important;
+}
+.light .border-primary\/20 {
+  border-color: hsl(217 85% 55% / 0.3) !important;
+}
+
+/* Light mode: remap avatar animation colors from cyan to blue via SVG overrides */
+.light svg stop[stop-color*="202"],
+.light svg stop[stop-color*="197"] {
+  stop-color: hsl(217 85% 55%) !important;
+}
+.light svg circle[stroke*="202"],
+.light svg circle[stroke*="197"] {
+  stroke: hsl(217 85% 55%) !important;
+}
+.light svg line[stroke*="197"],
+.light svg line[stroke*="202"] {
+  stroke: hsl(217 85% 55%) !important;
+}
+.light svg circle[stroke*="220"] {
+  stroke: hsl(217 85% 55%) !important;
+}
+
+/* Light mode: tools carousel — orbit lines cyan, hover/pulse blue */
+.light .border-blue-500\/10 {
+  border-color: hsl(187 70% 65% / 0.25) !important;
+}
+.light .border-cyan-400\/60 {
+  border-color: hsl(217 85% 55% / 0.6) !important;
+}
+.light .border-cyan-300 {
+  border-color: hsl(217 85% 55%) !important;
+}
+.light .border-cyan-500\/20 {
+  border-color: hsl(217 85% 55% / 0.2) !important;
+}
+
+/* Light mode: modal close button and dialog text */
+.light [role="dialog"] button[class*="right-4"][class*="top-4"],
+.light [role="alertdialog"] button[class*="right-4"][class*="top-4"] {
+  color: hsl(224 71% 10% / 0.7) !important;
+}
+.light [role="dialog"] button[class*="right-4"][class*="top-4"]:hover,
+.light [role="alertdialog"] button[class*="right-4"][class*="top-4"]:hover {
+  color: hsl(224 71% 10%) !important;
+}
+
+/* Light mode: modal borders */
+.light [role="dialog"],
+.light [role="alertdialog"] {
+  border-color: hsl(187 70% 65% / 0.3) !important;
+}
+.light [role="dialog"] [class*="border-b"],
+.light [role="alertdialog"] [class*="border-b"],
+.light [role="dialog"] [class*="border-t"],
+.light [role="alertdialog"] [class*="border-t"] {
+  border-color: hsl(187 70% 65% / 0.25) !important;
+}
+
+/* Light mode: boost card borders inside modals for visibility */
+.light [role="dialog"] .border-border\/50,
+.light [role="alertdialog"] .border-border\/50 {
+  border-color: hsl(187 70% 65% / 0.5) !important;
+}
+.light [role="dialog"] .hover\:border-cyan-400\/50:hover,
+.light [role="alertdialog"] .hover\:border-cyan-400\/50:hover {
+  border-color: hsl(217 85% 55% / 0.6) !important;
+}
+
+/* Light mode: ensure modal close X button is visible */
+.light [role="dialog"] [data-radix-collection-item],
+.light [role="dialog"] button:has(> .sr-only),
+.light [role="alertdialog"] button:has(> .sr-only) {
+  color: hsl(224 71% 10% / 0.6) !important;
+}
+.light [role="dialog"] button:has(> .sr-only):hover,
+.light [role="alertdialog"] button:has(> .sr-only):hover {
+  color: hsl(224 71% 10%) !important;
+}
+
+/* Light mode: cyan-400 icon colors in modal footers → blue */
+.light .text-cyan-400\/70 {
+  color: hsl(217 85% 55% / 0.7) !important;
+}
+.light .text-cyan-400\/50 {
+  color: hsl(217 85% 55% / 0.5) !important;
+}
+
+/* Light mode: certificate/project detail modal overlay buttons need darker bg for contrast */
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] button,
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] a {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] button:hover,
+.light [role="alertdialog"] [class*="bg-gradient-to-b"] a:hover {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  color: rgba(255, 255, 255, 1) !important;
 }

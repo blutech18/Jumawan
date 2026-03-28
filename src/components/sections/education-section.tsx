@@ -109,7 +109,7 @@ export function EducationSection() {
                         </h4>
                         <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 sm:gap-2">
                           {edu.coursework.map((course, index) => (
-                            <div key={index} className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary hover:bg-white/[0.06] hover:border-primary/20 transition-all duration-300">
+                            <div key={index} className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-muted/5 border border-border/20 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary hover:bg-muted/10 hover:border-primary/20 transition-all duration-300">
                               {course}
                             </div>
                           ))}
@@ -118,7 +118,7 @@ export function EducationSection() {
                     </div>
 
                     {/* Achievements */}
-                    <div className="lg:col-span-1 pt-4 sm:pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-white/[0.06] lg:pl-8">
+                    <div className="lg:col-span-1 pt-4 sm:pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/10 lg:pl-8">
                       <h4 className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3 sm:mb-5">
                         <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                         Achievements
@@ -127,7 +127,7 @@ export function EducationSection() {
                         {edu.achievements.map((achievement, index) => (
                           <div
                             key={index}
-                            className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors group/item"
+                            className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-muted/5 border border-border/10 hover:bg-muted/10 transition-colors group/item"
                           >
                             <span className="mt-1.5 sm:mt-2 w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-primary/60 group-hover/item:bg-primary group-hover/item:shadow-[0_0_8px_rgba(34,211,238,0.5)] transition-all duration-300 shrink-0" />
                             <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed group-hover/item:text-muted-foreground/90 transition-colors">

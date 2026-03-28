@@ -49,11 +49,11 @@ export function ProjectCard({ project, index, openModalAt }: ProjectCardProps) {
                         <OptimizedImage
                             src={project.image_url}
                             alt={project.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-black/5"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-muted/5"
                             draggable={false}
                             fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--overlay-bg)] via-[var(--card-overlay-via)] to-transparent opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
                     </button>
                 )}
                 <div className="p-6 flex flex-col">

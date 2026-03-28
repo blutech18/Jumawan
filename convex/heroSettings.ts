@@ -17,7 +17,7 @@ export const listActive = query({
 });
 
 export const getByType = query({
-  args: { type: v.union(v.literal("badge"), v.literal("resume"), v.literal("profile_image")) },
+  args: { type: v.union(v.literal("badge"), v.literal("resume"), v.literal("profile_image"), v.literal("hover_logo")) },
   handler: async (ctx, args) => {
     const all = await ctx.db
       .query("hero_settings")
@@ -29,7 +29,7 @@ export const getByType = query({
 
 export const create = mutation({
   args: {
-    type: v.union(v.literal("badge"), v.literal("resume"), v.literal("profile_image")),
+    type: v.union(v.literal("badge"), v.literal("resume"), v.literal("profile_image"), v.literal("hover_logo")),
     value: v.string(),
     order_index: v.number(),
     is_active: v.boolean(),
@@ -114,6 +114,26 @@ export const updateProfileImage = mutation({
     } else {
       const id = await ctx.db.insert("hero_settings", {
         type: "profile_image",
+        value: args.url,
+        order_index: 0,
+        is_active: true,
+      });
+      return await ctx.db.get(id);
+    }
+  },
+});
+
+export const updateHoverLogo = mutation({
+  args: { url: v.string() },
+  handler: async (ctx, args) => {
+    const all = await ctx.db.query("hero_settings").withIndex("by_type").collect();
+    const existing = all.find((s) => s.type === "hover_logo");
+    if (existing) {
+      await ctx.db.patch(existing._id, { value: args.url });
+      return await ctx.db.get(existing._id);
+    } else {
+      const id = await ctx.db.insert("hero_settings", {
+        type: "hover_logo",
         value: args.url,
         order_index: 0,
         is_active: true,

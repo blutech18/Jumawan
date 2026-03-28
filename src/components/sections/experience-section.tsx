@@ -108,7 +108,7 @@ export function ExperienceSection() {
             </h4>
             <div className="space-y-2 sm:space-y-3">
               {exp.achievements.slice(0, 3).map((a, idx) => (
-                <div key={idx} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors group/item">
+                <div key={idx} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-muted/5 border border-border/10 hover:bg-muted/10 transition-colors group/item">
                   <span className="mt-1.5 sm:mt-2 w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-primary/60 group-hover/item:bg-primary transition-all duration-300 shrink-0" />
                   <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">{a}</span>
                 </div>
@@ -123,13 +123,13 @@ export function ExperienceSection() {
 
           {/* Technologies */}
           {exp.technologies && exp.technologies.length > 0 && (
-            <div className="lg:col-span-1 pt-4 sm:pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-white/[0.06] lg:pl-8">
+            <div className="lg:col-span-1 pt-4 sm:pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/10 lg:pl-8">
               <h4 className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3 sm:mb-5">
                 <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />Technologies Used
               </h4>
               <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 sm:gap-2">
                 {exp.technologies.map((tech, idx) => (
-                  <div key={idx} className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary hover:bg-white/[0.06] hover:border-primary/20 transition-all duration-300">
+                  <div key={idx} className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-muted/10 border border-border/20 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 hover:border-primary/20 transition-all duration-300">
                     {tech}
                   </div>
                 ))}
@@ -193,10 +193,10 @@ export function ExperienceSection() {
 
       {/* Experience Detail Modal */}
       <Dialog open={!!selectedExp} onOpenChange={(open) => !open && setSelectedExp(null)}>
-        <DialogContent className="w-[92vw] max-w-4xl max-h-[85vh] flex flex-col border-white/[0.06] bg-[#000212]/95 backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl">
+        <DialogContent className="w-[92vw] max-w-4xl max-h-[85vh] flex flex-col border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl">
           {selectedExp && (
             <>
-              <div className="relative shrink-0 px-5 sm:px-8 pt-5 sm:pt-8 pb-4 border-b border-white/[0.06] bg-[#010626]/80 rounded-t-2xl md:rounded-t-3xl">
+              <div className="relative shrink-0 px-5 sm:px-8 pt-5 sm:pt-8 pb-4 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)] rounded-t-2xl md:rounded-t-3xl">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent rounded-t-2xl md:rounded-t-3xl" />
                 <DialogHeader className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 pr-8">
@@ -231,7 +231,7 @@ export function ExperienceSection() {
               </div>
 
               <div
-                className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-8 py-5 sm:py-6 bg-[#010626]/50 overscroll-contain"
+                className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-8 py-5 sm:py-6 bg-[var(--surface-bg-alt)] overscroll-contain"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
               >
                 <h4 className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-5">
@@ -241,7 +241,7 @@ export function ExperienceSection() {
                 {selectedExp.responsibilities && selectedExp.responsibilities.length > 0 ? (
                   <ul className="space-y-2.5">
                     {selectedExp.responsibilities.map((resp, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 p-2.5 sm:p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                      <li key={idx} className="flex items-start gap-2.5 p-2.5 sm:p-3 rounded-xl bg-muted/5 border border-border/10 hover:bg-muted/10 transition-colors">
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
                         <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{resp}</span>
                       </li>
@@ -252,7 +252,7 @@ export function ExperienceSection() {
                 )}
 
                 {(selectedExp.team_size || selectedExp.company_size) && (
-                  <div className="mt-6 pt-5 border-t border-white/[0.06] flex flex-wrap justify-center gap-6 text-xs sm:text-sm text-muted-foreground/60">
+                  <div className="mt-6 pt-5 border-t border-border/10 flex flex-wrap justify-center gap-6 text-xs sm:text-sm text-muted-foreground/60">
                     {selectedExp.team_size && (
                       <div className="flex items-center gap-2">
                         <span>Team Size:</span>

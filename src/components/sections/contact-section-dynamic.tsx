@@ -192,7 +192,7 @@ export function ContactSection() {
                           value={formData.name}
                           onChange={(e) => handleInputChange('name', e.target.value)}
                           className={cn(
-                            "bg-white/5 border-white/10 h-12 rounded-xl focus:bg-white/10 focus:border-primary/50 transition-all",
+                            "bg-muted/10 border-border/20 h-12 rounded-xl focus:bg-muted/15 focus:border-primary/50 transition-all",
                             errors.name && "border-destructive/50"
                           )}
                         />
@@ -205,7 +205,7 @@ export function ContactSection() {
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           className={cn(
-                            "bg-white/5 border-white/10 h-12 rounded-xl focus:bg-white/10 focus:border-primary/50 transition-all",
+                            "bg-muted/10 border-border/20 h-12 rounded-xl focus:bg-muted/15 focus:border-primary/50 transition-all",
                             errors.email && "border-destructive/50"
                           )}
                         />
@@ -220,7 +220,7 @@ export function ContactSection() {
                         value={formData.subject}
                         onChange={(e) => handleInputChange('subject', e.target.value)}
                         className={cn(
-                          "bg-white/5 border-white/10 h-12 rounded-xl focus:bg-white/10 focus:border-primary/50 transition-all",
+                          "bg-muted/10 border-border/20 h-12 rounded-xl focus:bg-muted/15 focus:border-primary/50 transition-all",
                           errors.subject && "border-destructive/50"
                         )}
                       />
@@ -235,7 +235,7 @@ export function ContactSection() {
                         value={formData.message}
                         onChange={(e) => handleInputChange('message', e.target.value)}
                         className={cn(
-                          "bg-white/5 border-white/10 rounded-xl focus:bg-white/10 focus:border-primary/50 transition-all resize-none",
+                          "bg-muted/10 border-border/20 rounded-xl focus:bg-muted/15 focus:border-primary/50 transition-all resize-none",
                           errors.message && "border-destructive/50"
                         )}
                       />
@@ -249,7 +249,7 @@ export function ContactSection() {
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
-                          <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          <span className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                           Sending...
                         </span>
                       ) : submitStatus === 'success' ? (
@@ -291,7 +291,7 @@ export function ContactSection() {
                         href={info.href}
                         className="flex items-start gap-3 sm:gap-4 group transition-all duration-300 hover:translate-x-2"
                       >
-                        <div className={cn("p-2.5 sm:p-3 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary/30 group-hover:bg-primary/10 transition-colors shrink-0", info.color)}>
+                        <div className={cn("p-2.5 sm:p-3 rounded-lg bg-muted/10 border border-border/10 group-hover:border-primary/30 group-hover:bg-primary/10 transition-colors shrink-0", info.color)}>
                           <info.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <div className="min-w-0">
@@ -311,7 +311,7 @@ export function ContactSection() {
                           href={social.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn("p-2.5 sm:p-3 rounded-lg bg-white/5 border border-white/5 text-muted-foreground transition-all hover:scale-110", social.color)}
+                          className={cn("p-2.5 sm:p-3 rounded-lg bg-muted/10 border border-border/10 text-muted-foreground transition-all hover:scale-110", social.color)}
                           title={social.label}
                         >
                           <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />

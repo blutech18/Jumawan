@@ -19,7 +19,7 @@ import { convexClient } from '@/lib/convexClient';
 import { api } from '../../../convex/_generated/api';
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { ChevronLeft, ChevronRight, ExternalLink, FolderOpen, Github, X } from "lucide-react";
+import { ExternalLink, FolderOpen, Github, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useLenis } from "lenis/react";
 
@@ -231,11 +231,11 @@ export function ProjectsSection() {
           <OptimizedImage
             src={project.image_url}
             alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-black/5"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-muted/5"
             draggable={false}
             fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--card-overlay-from)] via-transparent to-transparent" />
         </div>
       )}
 
@@ -246,7 +246,7 @@ export function ProjectsSection() {
         <p className="text-xs text-muted-foreground/60 leading-relaxed line-clamp-2">{project.description}</p>
         <div className="flex flex-wrap justify-center gap-1.5">
           {project.technologies.slice(0, 4).map((tech, idx) => (
-            <span key={idx} className="px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-[10px] font-medium text-muted-foreground">
+            <span key={idx} className="px-2 py-0.5 rounded-md bg-muted/5 border border-[var(--border-subtle)] text-[10px] font-medium text-muted-foreground">
               {tech}
             </span>
           ))}
@@ -274,18 +274,18 @@ export function ProjectsSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[...Array(4)].map((_, idx) => (
               <div key={idx} className="h-full bg-gradient-card border-border/20 shadow-card overflow-hidden rounded-xl">
-                <div className="relative h-48 w-full"><div className="absolute inset-0 bg-black/5 animate-pulse" /></div>
+                <div className="relative h-48 w-full"><div className="absolute inset-0 bg-muted/5 animate-pulse" /></div>
                 <div className="p-6 space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-black/5 animate-pulse" />
+                    <div className="w-12 h-12 rounded-lg bg-muted/5 animate-pulse" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-6 w-3/5 bg-black/5 animate-pulse rounded-md" />
-                      <div className="h-4 w-2/5 bg-black/5 animate-pulse rounded-md" />
+                      <div className="h-6 w-3/5 bg-muted/5 animate-pulse rounded-md" />
+                      <div className="h-4 w-2/5 bg-muted/5 animate-pulse rounded-md" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="h-4 w-full bg-black/5 animate-pulse rounded-md" />
-                    <div className="h-4 w-5/6 bg-black/5 animate-pulse rounded-md" />
+                    <div className="h-4 w-full bg-muted/5 animate-pulse rounded-md" />
+                    <div className="h-4 w-5/6 bg-muted/5 animate-pulse rounded-md" />
                   </div>
                 </div>
               </div>
@@ -339,28 +339,7 @@ export function ProjectsSection() {
               )}
 
               {/* Unified swipeable carousel — 1 card mobile, 2 cards desktop */}
-              <motion.div variants={itemVariants} className="relative overflow-hidden -mx-6 group/carousel">
-                {/* Arrow buttons for desktop */}
-                {!isMobile && totalPages > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={goToPrevPage}
-                      className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white/70 hover:text-white backdrop-blur-sm transition-all duration-300 ${currentPage === 0 ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover/carousel:opacity-100'}`}
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={goToNextPage}
-                      className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white/70 hover:text-white backdrop-blur-sm transition-all duration-300 ${currentPage === totalPages - 1 ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover/carousel:opacity-100'}`}
-                      aria-label="Next"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </>
-                )}
+              <motion.div variants={itemVariants} className="relative overflow-hidden -mx-6">
                 <div
                   ref={scrollRef}
                   onScroll={handleScroll}
@@ -405,11 +384,11 @@ export function ProjectsSection() {
                           type="button"
                           aria-label={`Go to page ${i + 1}`}
                           onClick={() => scrollToPage(i)}
-                          className={`rounded-full transition-all duration-300 ${i === currentPage ? "w-6 h-2 bg-cyan-400" : "w-2 h-2 bg-white/20 hover:bg-white/40"}`}
+                          className={`rounded-full transition-all duration-300 ${i === currentPage ? "w-6 h-2 bg-cyan-400" : "w-2 h-2 bg-border/20 hover:bg-border/40"}`}
                         />
                       ))}
                     </div>
-                    <span className="text-[11px] text-muted-foreground/50">{currentPage + 1} / {totalPages}</span>
+                    <span className="text-[11px] text-muted-foreground/40 italic">{isMobile ? 'Swipe' : 'Drag'} to explore · {currentPage + 1} / {totalPages}</span>
                   </div>
                 )}
               </motion.div>
@@ -463,8 +442,9 @@ function SeeAllProjectsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-3xl h-[75vh] flex flex-col border-white/[0.06] bg-[#000212]/95 backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl">
-        <div className="shrink-0 px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-white/[0.06]">
+      <DialogContent className="w-[92vw] max-w-3xl h-[75vh] flex flex-col border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl">
+        <div className="relative shrink-0 px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)]">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent rounded-t-2xl md:rounded-t-3xl" />
           <DialogHeader>
             <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
               All Projects ({projects.length})
@@ -473,7 +453,7 @@ function SeeAllProjectsModal({
         </div>
 
         <div
-          className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 overscroll-contain"
+          className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 bg-[var(--surface-bg-alt)] overscroll-contain"
           style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
         >
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -549,25 +529,25 @@ export function ProjectsModal({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-zinc-950/90 backdrop-blur-xl supports-[backdrop-filter]:backdrop-blur-xl border-none">
-        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-[var(--surface-modal)]/90 backdrop-blur-xl supports-[backdrop-filter]:backdrop-blur-xl border-none">
+        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-[var(--overlay-bg)] to-transparent pointer-events-none">
           <div className="flex items-start justify-between gap-4 pointer-events-auto">
             <AlertDialogTitle className="text-base md:text-lg font-bold text-white/90 tracking-tight drop-shadow-md line-clamp-1 mt-1">
               {project.title}
             </AlertDialogTitle>
             <div className="flex items-center gap-2">
               {project.live_url && (
-                <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm" title="Live Demo">
+                <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[var(--overlay-light)] hover:bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm" title="Live Demo">
                   <ExternalLink className="h-4 w-4" />
                 </a>
               )}
               {project.github_url && (
-                <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm" title="Source Code">
+                <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[var(--overlay-light)] hover:bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm" title="Source Code">
                   <Github className="h-4 w-4" />
                 </a>
               )}
               <AlertDialogCancel asChild>
-                <button className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-all duration-300 backdrop-blur-sm" title="Close">
+                <button className="p-2 rounded-full bg-[var(--overlay-light)] hover:bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm" title="Close">
                   <X className="h-4 w-4" />
                 </button>
               </AlertDialogCancel>
@@ -576,7 +556,7 @@ export function ProjectsModal({
         </AlertDialogHeader>
 
         <div className="flex flex-col h-[85vh] md:h-[80vh]">
-          <div className="relative flex-1 bg-black/95 flex items-center justify-center group overflow-hidden overscroll-contain">
+          <div className="relative flex-1 bg-[var(--surface-bg)]/95 flex items-center justify-center group overflow-hidden overscroll-contain">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 to-transparent opacity-50 pointer-events-none" />
             {project.image_url ? (
               <div className="relative w-full h-full flex items-center justify-center" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
@@ -596,7 +576,7 @@ export function ProjectsModal({
             )}
           </div>
 
-          <div className="shrink-0 bg-background/95 backdrop-blur-md border-t border-white/5 px-6 py-5 md:px-8 md:py-6">
+          <div className="shrink-0 bg-background/95 backdrop-blur-md border-t border-border/10 px-6 py-5 md:px-8 md:py-6">
             <div className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">{project.description}</p>
               <div className="flex flex-wrap gap-2">

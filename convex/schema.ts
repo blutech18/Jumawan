@@ -86,7 +86,8 @@ export default defineSchema({
     type: v.union(
       v.literal("badge"),
       v.literal("resume"),
-      v.literal("profile_image")
+      v.literal("profile_image"),
+      v.literal("hover_logo")
     ),
     value: v.string(),
     order_index: v.number(),

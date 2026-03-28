@@ -133,7 +133,7 @@ const MarqueeRow = ({ tools, reverse = false, baseSpeed = 40, scrollVelocity }: 
   if (tools.length === 0) return null;
 
   return (
-    <div className="overflow-hidden" style={{ height: '4.5rem', borderTop: '1px solid rgba(6,182,212,0.15)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}>
+    <div className="overflow-hidden" style={{ height: '4.5rem', borderTop: '1px solid var(--marquee-border, rgba(6,182,212,0.15))', borderBottom: '1px solid var(--marquee-border, rgba(6,182,212,0.15))' }}>
       <div
         ref={trackRef}
         style={{
@@ -237,8 +237,8 @@ const LaserBeam = () => {
       <defs>
         <linearGradient id="laserGradient" x1="0%" y1="100%" x2="0%" y2="0%">
           <stop offset="0%" stopColor="transparent" />
-          <stop offset="20%" stopColor="rgba(56, 189, 248, 0.3)" />
-          <stop offset="100%" stopColor="rgba(34, 211, 238, 0.9)" />
+          <stop offset="20%" stopColor="var(--laser-mid, rgba(56, 189, 248, 0.3))" />
+          <stop offset="100%" stopColor="var(--laser-tip, rgba(34, 211, 238, 0.9))" />
         </linearGradient>
         <filter id="glow">
           <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -312,8 +312,8 @@ const PlanetNode = ({
           </div>
           <div className={`
             absolute left-1/2 -translate-x-1/2 top-full mt-2
-            px-2 py-1 bg-black/90 border border-cyan-500/30 rounded
-            text-[10px] sm:text-xs text-cyan-50 whitespace-nowrap pointer-events-none
+            px-2 py-1 bg-[var(--surface-bg)]/90 border border-cyan-500/30 rounded
+            text-[10px] sm:text-xs text-foreground whitespace-nowrap pointer-events-none
             opacity-0 transform translate-y-2 transition-all duration-200
             ${isHovered ? "opacity-100 translate-y-0" : ""}
           `}>
@@ -442,7 +442,7 @@ const DesktopSolarSystem = ({
             className="absolute inset-0 rounded-full border border-cyan-300 pointer-events-none"
             style={{
               zIndex: -1,
-              boxShadow: "0 0 20px 4px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.4)"
+              boxShadow: "var(--pulse-shadow, 0 0 20px 4px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.4))"
             }}
           />
         ))}

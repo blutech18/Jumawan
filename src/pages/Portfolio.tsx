@@ -9,7 +9,7 @@ import { EducationSection } from "@/components/sections/education-section";
 import { ProjectsSection } from "@/components/sections/projects-section";
 import { ContactSection } from "@/components/sections/contact-section-dynamic";
 import { Footer } from "@/components/sections/footer";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import "@/styles/galaxy-background.css";
 
@@ -34,34 +34,24 @@ const Portfolio = () => {
   const { scrollYProgress } = useScroll({
     target: galaxyRef,
     offset: ["start start", "end end"],
-    layoutEffect: false // Prevents warning during SSR/initial render
+    layoutEffect: false
   });
 
-  // Spring-smoothed scroll progress for parallax layers
-  const springScroll = useSpring(scrollYProgress, {
-    stiffness: isMobile ? 80 : isTablet ? 70 : 60,
-    damping: isMobile ? 20 : isTablet ? 25 : 30,
-    restDelta: 0.001,
-  });
-  const smoothScroll = springScroll;
-
-  // Scroll-based parallax transforms — responsive across mobile/tablet/desktop
-  const starsLayer1Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "5%"] : isTablet ? ["0%", "7%"] : ["0%", "10%"]);
-  const starsLayer2Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "8%"] : isTablet ? ["0%", "12%"] : ["0%", "18%"]);
-  const starsLayer3Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "12%"] : isTablet ? ["0%", "18%"] : ["0%", "28%"]);
-
-  // Nebula parallax
-  const nebulaY = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "4%"] : isTablet ? ["0%", "6%"] : ["0%", "8%"]);
+  // Direct scroll transforms — no spring for better scroll performance
+  const starsLayer1Y = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "5%"] : isTablet ? ["0%", "7%"] : ["0%", "10%"]);
+  const starsLayer2Y = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "8%"] : isTablet ? ["0%", "12%"] : ["0%", "18%"]);
+  const starsLayer3Y = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "12%"] : isTablet ? ["0%", "18%"] : ["0%", "28%"]);
+  const nebulaY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "4%"] : isTablet ? ["0%", "6%"] : ["0%", "8%"]);
 
   return (
-    <div className="min-h-screen bg-[#030014] text-foreground">
+    <div className="min-h-screen bg-[var(--surface-bg)] text-foreground">
       <Navigation />
 
       <main>
         <HeroSection />
 
         {/* Unified Space/Galaxy Background for all sections */}
-        <div ref={galaxyRef} className="relative bg-[#030014]">
+        <div ref={galaxyRef} className="relative bg-[var(--surface-bg)] -mt-px" style={{ contain: 'paint' }}>
           {/* Scroll-based Animated Stars layers */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {/* Layer 1 - Slow parallax stars */}

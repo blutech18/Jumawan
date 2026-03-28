@@ -5,7 +5,7 @@ import { api } from '../../convex/_generated/api';
 export interface HeroSetting {
     _id: string;
     id: string;
-    type: 'badge' | 'resume' | 'profile_image';
+    type: 'badge' | 'resume' | 'profile_image' | 'hover_logo';
     value: string;
     order_index: number;
     is_active: boolean;
@@ -16,6 +16,7 @@ interface HeroSettingsState {
     badges: string[];
     resumeUrl: string;
     profileImageUrl: string;
+    hoverLogoUrl: string;
     loading: boolean;
     error: string | null;
     fetchSettings: () => Promise<void>;
@@ -25,6 +26,7 @@ export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
     badges: [],
     resumeUrl: '/Jumawan-Resume-UPDATED.png', // Default fallback
     profileImageUrl: '/placeholder.svg', // Default fallback
+    hoverLogoUrl: '', // Default fallback - no hover logo
     loading: false,
     error: null,
 
@@ -43,10 +45,14 @@ export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
             const profileImage = data?.find((item: any) => item.type === 'profile_image');
             const profileImageUrl = profileImage && profileImage.value ? profileImage.value : '/placeholder.svg';
 
+            const hoverLogo = data?.find((item: any) => item.type === 'hover_logo');
+            const hoverLogoUrl = hoverLogo && hoverLogo.value ? hoverLogo.value : '';
+
             set({
                 badges: badgeValues.length > 0 ? badgeValues : ['BSIT Student', 'Full Stack Developer', 'Freelancer'],
                 resumeUrl,
                 profileImageUrl,
+                hoverLogoUrl,
                 loading: false,
             });
         } catch (error) {

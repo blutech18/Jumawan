@@ -8,7 +8,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-[#021021]/80 backdrop-blur-md shadow-lg text-muted-foreground border-t border-white/10">
+    <footer className="relative bg-[var(--surface-nav)]/80 backdrop-blur-md shadow-lg text-muted-foreground border-t border-border/20">
       {/* top accent line */}
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
 
@@ -58,7 +58,7 @@ export function Footer() {
             </div>
 
             {/* availability status */}
-            <div className="mt-4 inline-flex items-center justify-center md:justify-start gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-foreground/90">
+            <div className="mt-4 inline-flex items-center justify-center md:justify-start gap-2 rounded-full border border-border/20 bg-muted/10 px-3 py-1 text-xs text-foreground/90">
               <span className="relative inline-flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />

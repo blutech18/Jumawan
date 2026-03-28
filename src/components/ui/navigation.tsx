@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Github, Linkedin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, X, Github, Linkedin, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
+import { useThemeStore } from "@/stores/useThemeStore";
 
 const navigationItems = [
   { name: "Home", href: "#home" },
@@ -21,6 +21,11 @@ export function Navigation() {
   const [activeSection, setActiveSection] = useState("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { scrollToSection: smoothScrollTo, scrollToTop } = useSmoothScroll();
+  const { theme, toggleTheme } = useThemeStore();
+
+  // When a nav link is clicked, lock the active section so scroll events
+  // don't cause the indicator to jump through intermediate sections.
+  const scrollLockRef = useRef(false);
 
   useEffect(() => {
     let ticking = false;
@@ -28,6 +33,12 @@ export function Navigation() {
     const updateOnScroll = () => {
       const scrolled = window.scrollY > 50;
       if (scrolled !== isScrolled) setIsScrolled(scrolled);
+
+      // Skip section detection while a programmatic scroll is in progress
+      if (scrollLockRef.current) {
+        ticking = false;
+        return;
+      }
 
       const sections = navigationItems.map(item => item.href.substring(1));
       const scrollPosition = window.scrollY + 150;
@@ -54,28 +65,32 @@ export function Navigation() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     // Run once on mount to initialize state correctly
     updateOnScroll();
-    return () => window.removeEventListener("scroll", handleScroll as EventListener);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [activeSection, isScrolled]);
 
   const scrollToSection = (href: string) => {
     const sectionId = href.substring(1);
 
     const performScroll = () => {
+      // Immediately set the active section and lock it
+      setActiveSection(sectionId);
+      scrollLockRef.current = true;
+
       if (sectionId === "home") {
         scrollToTop();
       } else {
         smoothScrollTo(sectionId);
       }
 
-      // Update active section after scroll animation completes
+      // Unlock after the scroll animation finishes so normal
+      // scroll-based detection resumes.
       setTimeout(() => {
-        setActiveSection(sectionId);
-      }, 1000);
+        scrollLockRef.current = false;
+      }, 1200);
     };
 
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false);
-      // Wait for the mobile menu close animation to finish before scrolling
       setTimeout(performScroll, 300);
     } else {
       performScroll();
@@ -89,8 +104,8 @@ export function Navigation() {
       transition={{ duration: 1.2, type: "spring", stiffness: 80, damping: 20 }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "bg-[#021021]/80 backdrop-blur-md shadow-lg py-2"
+        isScrolled || isMobileMenuOpen
+          ? "bg-[var(--surface-nav)] backdrop-blur-md shadow-lg py-2"
           : "bg-transparent py-3 sm:py-4"
       )}
       style={{ transform: "translateZ(0)", willChange: "transform" }}
@@ -134,8 +149,17 @@ export function Navigation() {
               </button>
             ))}
 
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              className="text-foreground/70 hover:text-primary transition-colors duration-300"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+
             {/* Social Icons */}
-            <div className="flex items-center space-x-4 ml-2 border-l border-white/10 pl-6">
+            <div className="flex items-center space-x-4 ml-2 border-l border-border/20 pl-6">
               <a
                 href="https://github.com/"
                 target="_blank"
@@ -157,13 +181,22 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-foreground hover:text-primary transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile: Theme Toggle + Menu Button */}
+          <div className="md:hidden flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              className="text-foreground hover:text-primary transition-colors"
+            >
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button
+              className="text-foreground hover:text-primary transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -179,7 +212,7 @@ export function Navigation() {
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.3 }
             }}
-            className="md:hidden bg-[#021021]/95 backdrop-blur-md border-t border-white/10 overflow-hidden"
+            className="md:hidden bg-[var(--surface-nav)] backdrop-blur-md border-t border-border/20 overflow-hidden"
           >
             <motion.div 
               className="container mx-auto px-4 sm:px-6 py-6"
@@ -210,14 +243,14 @@ export function Navigation() {
                       "px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border flex items-center justify-center",
                       activeSection === item.href.substring(1)
                         ? "text-primary border-primary/40 bg-primary/10"
-                        : "text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5"
+                        : "text-foreground/80 border-border/20 hover:text-primary hover:border-primary/30 hover:bg-primary/5"
                     )}
                   >
                     {item.name}
                   </motion.button>
                 ))}
 
-                {/* Social Icons as buttons with same style and height */}
+                {/* Social Icons */}
                 <motion.a
                   href="https://github.com/"
                   target="_blank"
@@ -231,7 +264,7 @@ export function Navigation() {
                     delay: 0.1 + (navigationItems.length * 0.05),
                     ease: [0.4, 0, 0.2, 1]
                   }}
-                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5 flex items-center justify-center"
+                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-border/20 hover:text-primary hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center"
                 >
                   <Github className="h-4 w-4" />
                 </motion.a>
@@ -248,7 +281,7 @@ export function Navigation() {
                     delay: 0.1 + ((navigationItems.length + 1) * 0.05),
                     ease: [0.4, 0, 0.2, 1]
                   }}
-                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-white/10 hover:text-primary hover:border-primary/30 hover:bg-white/5 flex items-center justify-center"
+                  className="px-4 py-2 h-10 text-sm font-medium transition-all duration-300 rounded-lg border text-foreground/80 border-border/20 hover:text-primary hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center"
                 >
                   <Linkedin className="h-4 w-4" />
                 </motion.a>

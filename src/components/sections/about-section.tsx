@@ -60,7 +60,7 @@ export function AboutSection() {
 
 
     return (
-        <section id="about" className="py-24 relative overflow-hidden" style={{ paddingTop: '6rem' }}>
+        <section id="about" className="relative overflow-hidden" style={{ paddingTop: '2rem', paddingBottom: '6rem' }}>
             <div className="container px-4 md:px-6 relative z-10">
                 <motion.div
                     initial="hidden"
@@ -77,11 +77,7 @@ export function AboutSection() {
                                 About Me
                             </span>
                         </h2>
-                        <div className="flex items-center justify-center gap-3 w-full">
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/70" />
-                            <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-                            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/70" />
-                        </div>              </motion.div>
+                    </motion.div>
 
                     <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
 

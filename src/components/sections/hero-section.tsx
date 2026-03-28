@@ -19,9 +19,11 @@ export function HeroSection() {
   const [imageError, setImageError] = useState(false);
   const [animationsReady, setAnimationsReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   // Fetch dynamic hero settings
-  const { badges, resumeUrl, profileImageUrl, fetchSettings } = useHeroSettingsStore();
+  const { badges, resumeUrl, profileImageUrl, hoverLogoUrl, fetchSettings } = useHeroSettingsStore();
 
   // Detect mobile/tablet for performance optimization
   useEffect(() => {
@@ -53,13 +55,13 @@ export function HeroSection() {
   });
 
   // Scroll-based parallax transforms — lighter on mobile for smooth feel
-  const backgroundY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "10%"] : ["0%", "25%"]);
-  const avatarY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "15%"] : ["0%", "35%"]);
-  const contentY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "8%"] : ["0%", "18%"]);
-  const avatarScale = useTransform(scrollYProgress, [0, 0.6], isMobile ? [1, 0.94] : [1, 0.88]);
-  const floatingElementsY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "20%"] : ["0%", "50%"]);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "5%"] : ["0%", "25%"]);
+  const avatarY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "8%"] : ["0%", "35%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "4%"] : ["0%", "18%"]);
+  const avatarScale = useTransform(scrollYProgress, [0, 0.6], isMobile ? [1, 0.97] : [1, 0.88]);
+  const floatingElementsY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "10%"] : ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
-  const nameX = useTransform(scrollYProgress, [0, 0.5], isMobile ? ["0%", "-1%"] : ["0%", "-3%"]);
+  const nameX = useTransform(scrollYProgress, [0, 0.5], isMobile ? ["0%", "0%"] : ["0%", "-3%"]);
   const fadeGradientOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7], [0, 0.8, 1]);
 
   useEffect(() => {
@@ -113,6 +115,18 @@ export function HeroSection() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  // Dismiss avatar logo on outside tap (mobile)
+  useEffect(() => {
+    if (!isMobile || !isAvatarHovered) return;
+    const handleOutsideTap = (e: TouchEvent | MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setIsAvatarHovered(false);
+      }
+    };
+    document.addEventListener('touchstart', handleOutsideTap);
+    return () => document.removeEventListener('touchstart', handleOutsideTap);
+  }, [isMobile, isAvatarHovered]);
 
   // Delay heavy animations until after initial render
   useEffect(() => {
@@ -230,11 +244,11 @@ export function HeroSection() {
       <section
       ref={sectionRef}
       id="home"
-      className="min-h-[100svh] flex flex-col relative overflow-hidden bg-[#030014]"
+      className="min-h-[100svh] flex flex-col relative overflow-hidden bg-[var(--surface-bg)]"
     >
       {/* Background with Mesh Gradient */}
       <motion.div
-        className="absolute inset-0 bg-[#030014]"
+        className="absolute inset-0 bg-[var(--surface-bg)]"
         style={{ y: backgroundY, willChange: 'transform' }}
       >
         <div className="absolute inset-0 bg-gradient-hero opacity-20" />
@@ -252,7 +266,7 @@ export function HeroSection() {
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, #030014 95%)',
+            background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, var(--surface-bg) 100%)',
           }}
         />
         {/* Subtle dot pattern */}
@@ -326,7 +340,7 @@ export function HeroSection() {
                 {badges.map((role) => (
                   <span
                     key={role}
-                    className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] sm:text-xs font-medium text-muted-foreground/90 bg-white/[0.03] border border-white/[0.06] hover:border-primary/20 hover:bg-white/[0.05] transition-all duration-300 cursor-default"
+                    className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] sm:text-xs font-medium text-muted-foreground/90 bg-muted/5 border border-border/10 hover:border-primary/20 hover:bg-muted/10 transition-all duration-300 cursor-default"
                   >
                     {role}
                   </span>
@@ -415,7 +429,7 @@ export function HeroSection() {
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   className="absolute inset-0 rounded-full pointer-events-none"
                   style={{
-                    background: 'radial-gradient(circle, hsl(210 100% 60% / 0.8), hsl(220 90% 55% / 0.6), hsl(230 80% 40% / 0.3), transparent 70%)',
+                    background: 'radial-gradient(circle, var(--avatar-glow-1), var(--avatar-glow-2), var(--avatar-glow-3), transparent 70%)',
                     filter: 'blur(60px)',
                     mixBlendMode: 'screen',
                     willChange: animationsReady ? 'opacity, transform' : 'auto'
@@ -523,8 +537,8 @@ export function HeroSection() {
 
                 {/* Orbiting dots - reduced to 2 for better performance */}
                 {animationsReady && [
-                  { delay: 0, dur: 6, size: 6, color: 'hsl(197 100% 70%)', glow: 'hsl(197 100% 70% / 0.5)' },
-                  { delay: 3, dur: 6, size: 5, color: 'hsl(220 80% 65%)', glow: 'hsl(220 80% 65% / 0.4)' },
+                  { delay: 0, dur: 6, size: 6, color: 'var(--avatar-dot-1)', glow: 'var(--avatar-dot-1-glow)' },
+                  { delay: 3, dur: 6, size: 5, color: 'var(--avatar-dot-2)', glow: 'var(--avatar-dot-2-glow)' },
                 ].map((dot, i) => (
                   <div
                     key={`orbit-dot-${i}`}
@@ -566,7 +580,7 @@ export function HeroSection() {
                     }}
                     className="absolute inset-0 rounded-full border pointer-events-none"
                     style={{
-                      borderColor: ['hsl(202 85% 55% / 0.25)', 'hsl(197 100% 70% / 0.2)'][i],
+                      borderColor: ['var(--avatar-pulse-1)', 'var(--avatar-pulse-2)'][i],
                       willChange: 'transform, opacity'
                     }}
                   />
@@ -580,7 +594,7 @@ export function HeroSection() {
                   className="absolute inset-0 rounded-full"
                   style={{
                     padding: '3px',
-                    background: 'conic-gradient(from 0deg, transparent 0%, transparent 20%, hsl(260 70% 60% / 0.08) 30%, hsl(202 85% 55% / 0.15) 45%, hsl(197 100% 70% / 0.5) 60%, hsl(202 85% 55%) 75%, hsl(197 100% 70%) 88%, hsl(260 70% 60% / 0.6) 95%, transparent 100%)',
+                    background: 'var(--avatar-comet)',
                     WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                     WebkitMaskComposite: 'xor',
                     maskComposite: 'exclude',
@@ -597,7 +611,7 @@ export function HeroSection() {
                   className="absolute inset-0 rounded-full"
                   style={{
                     padding: '3px',
-                    background: 'conic-gradient(from 180deg, transparent 0%, transparent 70%, hsl(260 70% 60% / 0.2) 80%, hsl(220 80% 60% / 0.35) 90%, transparent 100%)',
+                    background: 'var(--avatar-comet-accent)',
                     WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                     WebkitMaskComposite: 'xor',
                     maskComposite: 'exclude',
@@ -607,22 +621,58 @@ export function HeroSection() {
                 )}
 
                 {/* Photo - seamless against border */}
-                <div className="absolute inset-[3px] rounded-full overflow-hidden">
+                <div
+                  ref={avatarRef}
+                  className="absolute inset-[3px] rounded-full overflow-hidden cursor-pointer"
+                  onMouseEnter={() => { if (!isMobile) setIsAvatarHovered(true); }}
+                  onMouseLeave={() => { if (!isMobile) setIsAvatarHovered(false); }}
+                  onClick={() => { if (isMobile && hoverLogoUrl) setIsAvatarHovered(prev => !prev); }}
+                >
                   {imageError ? (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5 rounded-full">
                       <div className="text-4xl font-bold text-primary/60">CJ</div>
                     </div>
                   ) : (
-                    <motion.img
-                      src={profileImageUrl}
-                      alt="Cristan Jade Jumawan - Full Stack Developer"
-                      className="w-full h-full object-cover rounded-full"
-                      loading="eager"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      onError={() => setImageError(true)}
-                      style={{ willChange: 'transform' }}
-                    />
+                    <div className="relative w-full h-full">
+                      {/* Profile image */}
+                      <motion.img
+                        src={profileImageUrl}
+                        alt="Cristan Jade Jumawan - Full Stack Developer"
+                        className="absolute inset-0 w-full h-full object-cover rounded-full"
+                        loading="eager"
+                        animate={{
+                          opacity: isAvatarHovered && hoverLogoUrl ? 0 : 1,
+                          scale: isAvatarHovered && hoverLogoUrl ? 0.9 : 1,
+                        }}
+                        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                        onError={() => setImageError(true)}
+                        style={{ willChange: 'transform, opacity' }}
+                      />
+                      {/* Hover logo (BluTech) */}
+                      {hoverLogoUrl && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--surface-bg)]/80 backdrop-blur-sm"
+                          animate={{
+                            opacity: isAvatarHovered ? 1 : 0,
+                            scale: isAvatarHovered ? 1 : 1.1,
+                          }}
+                          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                          style={{ willChange: 'transform, opacity' }}
+                        >
+                          <motion.img
+                            src={hoverLogoUrl}
+                            alt="BluTech Logo"
+                            className="w-[65%] h-[65%] object-contain drop-shadow-[0_0_20px_hsl(202,85%,55%,0.4)]"
+                            animate={{
+                              scale: isAvatarHovered ? 1 : 0.7,
+                              rotate: isAvatarHovered ? 0 : -10,
+                            }}
+                            transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                            style={{ willChange: 'transform' }}
+                          />
+                        </motion.div>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -631,9 +681,9 @@ export function HeroSection() {
                 <motion.div
                   animate={shouldReduceMotion ? undefined : {
                     boxShadow: [
-                      '0 0 20px 2px hsl(202 85% 55% / 0.08), 0 0 50px 6px hsl(202 85% 55% / 0.04)',
-                      '0 0 35px 6px hsl(197 100% 70% / 0.15), 0 0 70px 12px hsl(260 70% 60% / 0.05)',
-                      '0 0 20px 2px hsl(202 85% 55% / 0.08), 0 0 50px 6px hsl(202 85% 55% / 0.04)',
+                      'var(--avatar-shadow-1)',
+                      'var(--avatar-shadow-2)',
+                      'var(--avatar-shadow-1)',
                     ],
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -656,7 +706,7 @@ export function HeroSection() {
             <motion.div
               animate={{ y: [0, 6, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="cursor-pointer w-6 h-10 rounded-full border border-white/[0.08] flex items-start justify-center pt-2 hover:border-primary/20 transition-colors"
+              className="cursor-pointer w-6 h-10 rounded-full border border-border/20 flex items-start justify-center pt-2 hover:border-primary/20 transition-colors"
               onClick={() => scrollToSection("about")}
             >
               <motion.div
@@ -673,7 +723,7 @@ export function HeroSection() {
       <motion.div
         className="absolute bottom-0 left-0 right-0 h-72 sm:h-80 md:h-72 pointer-events-none z-20"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, #030014 80%)',
+          background: 'linear-gradient(to bottom, transparent 0%, var(--surface-bg) 80%)',
           opacity: fadeGradientOpacity,
           willChange: 'opacity'
         }}
