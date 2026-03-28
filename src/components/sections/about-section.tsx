@@ -1,19 +1,39 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { useAboutSectionStore, getAboutCarouselItems } from "@/stores/useAboutSectionStore";
 
 
 export function AboutSection() {
     const { images, loading, fetchImages } = useAboutSectionStore();
     const carouselItems = getAboutCarouselItems(images);
+    const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [slideCount, setSlideCount] = useState(0);
 
     useEffect(() => {
         fetchImages();
     }, [fetchImages]);
+
+    const onSelect = useCallback(() => {
+        if (!carouselApi) return;
+        setCurrentSlide(carouselApi.selectedScrollSnap());
+        setSlideCount(carouselApi.scrollSnapList().length);
+    }, [carouselApi]);
+
+    useEffect(() => {
+        if (!carouselApi) return;
+        onSelect();
+        carouselApi.on("select", onSelect);
+        carouselApi.on("reInit", onSelect);
+        return () => {
+            carouselApi.off("select", onSelect);
+            carouselApi.off("reInit", onSelect);
+        };
+    }, [carouselApi, onSelect]);
 
     const containerVariants = useMemo(() => ({
         hidden: { opacity: 0 },
@@ -65,9 +85,9 @@ export function AboutSection() {
 
                     <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
 
-                        {/* Left Column - Image/Carousel (dynamic, responsive) */}
+                        {/* Left Column - Image/Carousel (1:1 Instagram-style) */}
                         <motion.div variants={itemVariants} className="lg:col-span-5 relative group">
-                            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] min-h-[280px] sm:min-h-[320px] md:min-h-[360px] shadow-2xl shadow-primary/5 bg-muted/20">
+                            <div className="relative rounded-2xl overflow-hidden aspect-square shadow-2xl shadow-primary/5 bg-muted/20">
                                 {loading && carouselItems.length === 0 ? (
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="h-12 w-12 animate-pulse rounded-full bg-primary/20" aria-hidden />
@@ -75,10 +95,14 @@ export function AboutSection() {
                                 ) : (
                                     <Carousel 
                                         className="w-full h-full"
+                                        setApi={setCarouselApi}
                                         opts={{
-                                            align: "start",
+                                            align: "center",
                                             loop: true,
-                                            dragFree: true,
+                                            dragFree: false,
+                                            containScroll: "trimSnaps",
+                                            skipSnaps: false,
+                                            duration: 25,
                                         }}
                                     >
                                         <CarouselContent className="-ml-0 h-full">
@@ -103,6 +127,25 @@ export function AboutSection() {
                                                 </CarouselItem>
                                             ))}
                                         </CarouselContent>
+
+                                        {/* Instagram-style dot indicators */}
+                                        {slideCount > 1 && (
+                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                                                {Array.from({ length: slideCount }).map((_, i) => (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        aria-label={`Go to slide ${i + 1}`}
+                                                        onClick={() => carouselApi?.scrollTo(i)}
+                                                        className={`rounded-full transition-all duration-300 ${
+                                                            i === currentSlide
+                                                                ? "w-2 h-2 bg-white"
+                                                                : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60"
+                                                        }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </Carousel>
                                 )}
                             </div>

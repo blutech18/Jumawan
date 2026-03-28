@@ -30,7 +30,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   fetchProjects: async () => {
     set({ loading: true, error: null });
     try {
-      const data = await convexClient.query(api.projects.listFeatured);
+      const data = await convexClient.query(api.projects.list);
       const mapped = (data || []).map((p: any) => ({ ...p, id: p._id }));
       set({ projects: mapped, loading: false });
     } catch (error) {

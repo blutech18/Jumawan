@@ -9,8 +9,8 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Portfolio Dark Navy Theme */
-    --background: 227 100% 8%;
-    /* Navy #010626 */
+    --background: 249 100% 4%;
+    /* #030014 */
     --foreground: 210 40% 98%;
 
     --card: 227 95% 12%;
@@ -61,7 +61,7 @@ All colors MUST be HSL.
     /* Light accents */
 
     /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(227 100% 12%) 0%, hsl(227 100% 6%) 50%, #030014 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(227 100% 10%) 0%, hsl(260 100% 4%) 50%, #030014 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--navy-800)), hsl(var(--navy-700)));
     --gradient-border: linear-gradient(135deg, hsl(var(--sky-400)), hsl(var(--blue-600)));
     --gradient-glow: radial-gradient(circle at center, hsl(var(--sky-400) / 0.2), transparent 70%);
@@ -99,7 +99,8 @@ All colors MUST be HSL.
     /* IE/Edge */
     /* Mobile optimizations */
     -webkit-tap-highlight-color: transparent;
-    touch-action: pan-y;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
   }
 
   h1,
@@ -194,11 +195,6 @@ All colors MUST be HSL.
 
   /* Mobile-specific optimizations */
   @media (max-width: 1023px) {
-    /* Simplify transforms on mobile */
-    [style*="transform"] {
-      transform: translateZ(0) !important;
-    }
-
     /* Reduce blur effects on mobile for better performance */
     [style*="blur"] {
       filter: blur(30px) !important;
@@ -215,19 +211,6 @@ All colors MUST be HSL.
   /* Enable momentum scrolling on iOS */
   body {
     -webkit-overflow-scrolling: touch;
-  }
-
-  /* Content-visibility optimization for off-screen sections */
-  section {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 800px;
-  }
-
-  /* Ensure all motion.div animated elements use GPU compositing */
-  [style*="transform"] {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
   }
 
   /* Smooth section transition styles */
@@ -259,4 +242,19 @@ All colors MUST be HSL.
       background-position: 100% 50%;
     }
   }
+}
+
+/* Force pure fade on all modal/dialog/sheet content — no slide, no zoom */
+/* Must be outside @layer to have highest specificity */
+[role="dialog"],
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content],
+[data-state="open"][role="dialog"],
+[data-state="closed"][role="dialog"] {
+  --tw-enter-translate-x: 0 !important;
+  --tw-enter-translate-y: 0 !important;
+  --tw-exit-translate-x: 0 !important;
+  --tw-exit-translate-y: 0 !important;
+  --tw-enter-scale: 1 !important;
+  --tw-exit-scale: 1 !important;
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, useScroll, useTransform, useSpring, MotionValue, useMotionValue, useAnimationFrame, useMotionTemplate } from "framer-motion";
-import { convexClient } from '@/lib/convexClient';
+import { useQuery } from "convex/react";
 import { api } from '../../../convex/_generated/api';
 
 // --- Types ---
@@ -11,55 +11,151 @@ interface DisplayTool {
   image: string;
 }
 
-// --- Marquee Row with pixel-based CSS animation for seamless loop ---
-const MarqueeRow = ({ tools, reverse = false, speedMultiplier = 1 }: { 
+// --- Shared scroll velocity tracker for mobile marquee ---
+function useScrollVelocity() {
+  const velocity = useRef(0);
+
+  useEffect(() => {
+    let rafId: number;
+    let prevY = window.scrollY;
+    let prevTime = performance.now();
+
+    const tick = (now: number) => {
+      const dt = (now - prevTime) / 1000; // seconds
+      const currentY = window.scrollY;
+      const dist = Math.abs(currentY - prevY);
+
+      if (dt > 0) {
+        // Pixels per second — true velocity
+        const instantSpeed = dist / dt;
+        // Smooth it so it doesn't spike/drop instantly
+        const smoothing = 0.3;
+        velocity.current += (instantSpeed - velocity.current) * smoothing;
+      }
+
+      prevY = currentY;
+      prevTime = now;
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  return velocity;
+}
+
+// --- Marquee Row driven by requestAnimationFrame with scroll-responsive speed ---
+const MarqueeRow = ({ tools, reverse = false, baseSpeed = 40, scrollVelocity }: { 
   tools: DisplayTool[]; 
   reverse?: boolean;
-  speedMultiplier?: number;
+  baseSpeed?: number;
+  scrollVelocity: React.MutableRefObject<number>;
 }) => {
-  const uniqueId = useRef(`marquee-${Math.random().toString(36).substr(2, 9)}`).current;
+  const trackRef = useRef<HTMLDivElement>(null);
+  const setARef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const widthRef = useRef(0);
+  const initializedRef = useRef(false);
+  const smoothSpeedRef = useRef(baseSpeed);
   
+  const repeatCount = tools.length > 0 ? Math.max(8, Math.ceil(80 / tools.length)) : 0;
+  const oneSet = tools.length > 0 ? Array(repeatCount).fill(tools).flat() : [];
+
+  // Measure width of one set
+  useEffect(() => {
+    if (tools.length === 0) return;
+    const measure = () => {
+      if (setARef.current) {
+        widthRef.current = setARef.current.offsetWidth;
+        if (!initializedRef.current && reverse && widthRef.current > 0) {
+          offsetRef.current = -widthRef.current;
+          initializedRef.current = true;
+        }
+      }
+    };
+    measure();
+    const timer = setTimeout(measure, 200);
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      clearTimeout(timer);
+    };
+  }, [tools.length, reverse]);
+
+  // Animation loop — single smooth pipeline
+  useEffect(() => {
+    if (tools.length === 0) return;
+    let rafId: number;
+    let lastTime = 0;
+
+    const animate = (time: number) => {
+      if (lastTime === 0) lastTime = time;
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+
+      const w = widthRef.current;
+      if (w > 0 && trackRef.current && dt > 0 && dt < 0.1) {
+        // Scroll boost: map velocity to a 0-4 multiplier for noticeable effect
+        const scrollSpeed = scrollVelocity.current;
+        const boost = Math.min(4, scrollSpeed / 200);
+        const targetSpeed = baseSpeed + baseSpeed * boost;
+        
+        // Frame-rate independent exponential smoothing
+        const halfLife = boost > 0.1 ? 0.15 : 0.6; // fast ramp-up, slow decay
+        const factor = 1 - Math.pow(0.5, dt / halfLife);
+        smoothSpeedRef.current += (targetSpeed - smoothSpeedRef.current) * factor;
+        
+        const direction = reverse ? 1 : -1;
+        offsetRef.current += direction * smoothSpeedRef.current * dt;
+
+        // Modulo wrap
+        if (!reverse) {
+          if (offsetRef.current <= -w) {
+            offsetRef.current = offsetRef.current % w;
+          }
+        } else {
+          if (offsetRef.current >= 0) {
+            offsetRef.current = -w + (offsetRef.current % w);
+          }
+        }
+
+        trackRef.current.style.transform = `translate3d(${offsetRef.current}px, 0, 0)`;
+      }
+
+      rafId = requestAnimationFrame(animate);
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [tools.length, baseSpeed, reverse, scrollVelocity]);
+
   if (tools.length === 0) return null;
-  
-  // Create enough icons to fill viewport
-  // speedMultiplier increases icon count = more distance = faster visual speed
-  const baseMinIcons = 20;
-  const minIcons = Math.ceil(baseMinIcons * speedMultiplier);
-  const repeatCount = Math.max(1, Math.ceil(minIcons / Math.max(1, tools.length)));
-  const oneSet = Array(repeatCount).fill(tools).flat();
-  
-  // Each icon: 3rem (48px) width + 1.5rem (24px) margin on each side = 96px total
-  const iconTotalWidth = 96;
-  const oneSetWidth = oneSet.length * iconTotalWidth;
-  
-  // Duration: 10 minutes (600 seconds) per full cycle
-  // Speed is controlled by icon count, not duration
-  const duration = 600;
 
   return (
-    <div style={{ height: '5rem', overflow: 'hidden', borderTop: '1px solid rgba(6,182,212,0.2)', borderBottom: '1px solid rgba(6,182,212,0.2)' }}>
-      <style>{`
-        @keyframes ${uniqueId} {
-          from { transform: translateX(0px); }
-          to { transform: translateX(${reverse ? oneSetWidth : -oneSetWidth}px); }
-        }
-      `}</style>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-        animation: `${uniqueId} ${duration}s linear infinite`
-      }}>
-        {/* First set */}
-        {oneSet.map((tool, i) => (
-          <div key={`a-${i}`} style={{ flexShrink: 0, width: '3rem', height: '3rem', margin: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={tool.image} alt={tool.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-        ))}
-        {/* Second set (identical copy for seamless loop) */}
-        {oneSet.map((tool, i) => (
-          <div key={`b-${i}`} style={{ flexShrink: 0, width: '3rem', height: '3rem', margin: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={tool.image} alt={tool.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    <div className="overflow-hidden" style={{ height: '4.5rem', borderTop: '1px solid rgba(6,182,212,0.15)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}>
+      <div
+        ref={trackRef}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+          width: 'max-content',
+          willChange: 'transform',
+        }}
+      >
+        {/* 3 identical sets for bulletproof seamless loop */}
+        {[0, 1, 2].map((setIdx) => (
+          <div key={setIdx} ref={setIdx === 0 ? setARef : undefined} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            {oneSet.map((tool, i) => (
+              <div
+                key={`${setIdx}-${i}`}
+                className="flex-shrink-0 flex items-center justify-center"
+                style={{ width: '2.75rem', height: '2.75rem', margin: '0 1.25rem' }}
+              >
+                <img src={tool.image} alt={tool.name} className="w-full h-full object-contain opacity-70" draggable={false} />
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -77,12 +173,24 @@ const MobileToolsLayout = ({
   middleRing: DisplayTool[];
   outerRing: DisplayTool[];
 }) => {
+  const scrollVelocity = useScrollVelocity();
   const allTools = [...innerRing, ...middleRing, ...outerRing];
-  const toolsPerLine = Math.ceil(allTools.length / 3);
   
-  const line1 = allTools.slice(0, toolsPerLine);
-  const line2 = allTools.slice(toolsPerLine, toolsPerLine * 2);
-  const line3 = allTools.slice(toolsPerLine * 2);
+  // Fisher-Yates shuffle with a seed so it's stable per mount but random per row
+  const shuffle = (arr: DisplayTool[], seed: number) => {
+    const copy = [...arr];
+    let s = seed;
+    for (let i = copy.length - 1; i > 0; i--) {
+      s = (s * 16807 + 0) % 2147483647;
+      const j = s % (i + 1);
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  const line1 = shuffle(allTools, 1);
+  const line2 = shuffle(allTools, 2);
+  const line3 = shuffle(allTools, 3);
 
   return (
     <motion.div 
@@ -92,14 +200,14 @@ const MobileToolsLayout = ({
       transition={{ duration: 0.9, ease: "easeOut" }}
     >
       <motion.div 
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.2, delay: 0.3 }}
       >
-        <MarqueeRow tools={line1} speedMultiplier={2.0} />
-        <MarqueeRow tools={line2} reverse speedMultiplier={2.0} />
-        <MarqueeRow tools={line3} speedMultiplier={2.0} />
+        <MarqueeRow tools={line1} baseSpeed={44} scrollVelocity={scrollVelocity} />
+        <MarqueeRow tools={line2} reverse baseSpeed={28} scrollVelocity={scrollVelocity} />
+        <MarqueeRow tools={line3} baseSpeed={50} scrollVelocity={scrollVelocity} />
       </motion.div>
 
       {/* Central Logo In Front */}
@@ -112,7 +220,7 @@ const MobileToolsLayout = ({
         <motion.img
           src="/blutech.png"
           alt="Tech Core"
-          className="w-32 h-32 xs:w-40 xs:h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 object-contain"
+          className="w-[10rem] h-[10rem] sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -399,10 +507,32 @@ const DesktopSolarSystem = ({
 // --- Main Component ---
 export function ToolsCarousel() {
   const containerRef = useRef<HTMLElement>(null);
-  const [innerRing, setInnerRing] = useState<DisplayTool[]>([]);
-  const [middleRing, setMiddleRing] = useState<DisplayTool[]>([]);
-  const [outerRing, setOuterRing] = useState<DisplayTool[]>([]);
   
+  // Reactive query — auto-updates when tools are added/removed/toggled in admin
+  const data = useQuery(api.tools.listActive);
+
+  const { innerRing, middleRing, outerRing } = useMemo(() => {
+    if (!data || data.length === 0) return { innerRing: [], middleRing: [], outerRing: [] };
+
+    const uniqueToolsMap = new Map<string, DisplayTool>();
+    data.forEach((t) => {
+      if (!uniqueToolsMap.has(t.name)) {
+        uniqueToolsMap.set(t.name, { name: t.name, image: t.icon_url });
+      }
+    });
+    const allTools = Array.from(uniqueToolsMap.values());
+
+    const total = allTools.length;
+    const innerCount = Math.max(3, Math.floor(total * 0.2));
+    const middleCount = Math.max(5, Math.floor(total * 0.35));
+
+    return {
+      innerRing: allTools.slice(0, innerCount),
+      middleRing: allTools.slice(innerCount, innerCount + middleCount),
+      outerRing: allTools.slice(innerCount + middleCount),
+    };
+  }, [data]);
+
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth < 1024;
@@ -419,44 +549,11 @@ export function ToolsCarousel() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const fetchTools = async () => {
-      try {
-        const data = await convexClient.query(api.tools.listActive);
-
-        if (data && data.length > 0) {
-          const uniqueToolsMap = new Map();
-          data.forEach((t: any) => {
-            if (!uniqueToolsMap.has(t.name)) {
-              uniqueToolsMap.set(t.name, {
-                name: t.name,
-                image: t.icon_url
-              });
-            }
-          });
-          const allTools = Array.from(uniqueToolsMap.values());
-
-          const total = allTools.length;
-          const innerCount = Math.max(3, Math.floor(total * 0.2));
-          const middleCount = Math.max(5, Math.floor(total * 0.35));
-
-          setInnerRing(allTools.slice(0, innerCount));
-          setMiddleRing(allTools.slice(innerCount, innerCount + middleCount));
-          setOuterRing(allTools.slice(innerCount + middleCount));
-        }
-      } catch (error) {
-        console.warn('Failed to fetch tools:', error);
-      }
-    };
-
-    fetchTools();
-  }, []);
-
   return (
     <section
       ref={containerRef}
       id="tools"
-      className="py-20 sm:py-24 relative overflow-hidden bg-transparent min-h-[1000px] flex flex-col items-center justify-center"
+      className="py-20 sm:py-24 relative overflow-hidden bg-transparent min-h-[600px] md:min-h-[1000px] flex flex-col items-center justify-center"
     >
       <motion.div 
         className="container mx-auto px-4 relative z-10 flex flex-col items-center"

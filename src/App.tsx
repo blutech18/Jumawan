@@ -24,29 +24,18 @@ const App = () => {
     }
   }, []);
 
-  // Detect mobile for optimized scroll settings
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   return (
     <ConvexProvider client={convex}>
       <ReactLenis root options={{
-        lerp: isMobile ? 0.08 : 0.08,
-        duration: isMobile ? 1.6 : 1.6,
+        lerp: 0.08,
+        duration: 1.6,
         smoothWheel: true,
-        wheelMultiplier: isMobile ? 0.85 : 0.9,
-        touchMultiplier: isMobile ? 1.8 : 1.5,
+        wheelMultiplier: 0.9,
+        touchMultiplier: 1,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
-        syncTouch: true,
-        syncTouchLerp: isMobile ? 0.08 : 0.075,
+        syncTouch: false,
         infinite: false,
         autoResize: true,
         prevent: (node) => node.classList.contains('no-smooth-scroll'),

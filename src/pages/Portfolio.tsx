@@ -17,13 +17,18 @@ import "@/styles/galaxy-background.css";
 const Portfolio = () => {
   const galaxyRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
-  // Detect mobile for performance optimization
+  // Detect mobile/tablet for performance optimization
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkDevice = () => {
+      const w = window.innerWidth;
+      setIsMobile(w < 768);
+      setIsTablet(w >= 768 && w < 1024);
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   const { scrollYProgress } = useScroll({
@@ -32,20 +37,21 @@ const Portfolio = () => {
     layoutEffect: false // Prevents warning during SSR/initial render
   });
 
-  // Spring-smoothed scroll progress — prevents choppy jumps on fast scroll
-  const smoothScroll = useSpring(scrollYProgress, {
-    stiffness: isMobile ? 60 : 60,
-    damping: isMobile ? 30 : 30,
+  // Spring-smoothed scroll progress for parallax layers
+  const springScroll = useSpring(scrollYProgress, {
+    stiffness: isMobile ? 80 : isTablet ? 70 : 60,
+    damping: isMobile ? 20 : isTablet ? 25 : 30,
     restDelta: 0.001,
   });
+  const smoothScroll = springScroll;
 
-  // Scroll-based parallax transforms for star layers (slightly reduced on mobile for performance)
-  const starsLayer1Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "8%"] : ["0%", "10%"]);
-  const starsLayer2Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "15%"] : ["0%", "18%"]);
-  const starsLayer3Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "24%"] : ["0%", "28%"]);
+  // Scroll-based parallax transforms — responsive across mobile/tablet/desktop
+  const starsLayer1Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "5%"] : isTablet ? ["0%", "7%"] : ["0%", "10%"]);
+  const starsLayer2Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "8%"] : isTablet ? ["0%", "12%"] : ["0%", "18%"]);
+  const starsLayer3Y = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "12%"] : isTablet ? ["0%", "18%"] : ["0%", "28%"]);
 
-  // Nebula parallax (slower movement for depth and smoothness)
-  const nebulaY = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "6%"] : ["0%", "8%"]);
+  // Nebula parallax
+  const nebulaY = useTransform(smoothScroll, [0, 1], isMobile ? ["0%", "4%"] : isTablet ? ["0%", "6%"] : ["0%", "8%"]);
 
   return (
     <div className="min-h-screen bg-[#030014] text-foreground">

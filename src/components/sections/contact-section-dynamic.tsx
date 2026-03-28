@@ -145,7 +145,7 @@ export function ContactSection() {
   ];
 
   return (
-    <section id="contact" className="py-24 relative overflow-hidden flex items-center justify-center min-h-screen border-none outline-none">
+    <section id="contact" className="py-24 relative overflow-hidden flex items-center justify-center min-h-[100svh] border-none outline-none">
       {/* Background Elements */}
       {/* Background Elements removed for seamless integration with global galaxy background */}
 
@@ -179,7 +179,7 @@ export function ContactSection() {
                 viewport={{ once: true }}
                 className="lg:col-span-7 relative z-10"
               >
-                <div className="border border-border/50 rounded-xl p-8 md:p-10 relative overflow-hidden transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                <div className="border border-border/50 rounded-xl p-5 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
                   {/* Glass Reflection */}
                   <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
@@ -280,43 +280,41 @@ export function ContactSection() {
                   (parent has pointer-events-none to let clicks pass through to form if needed, though here strictly layout side-by-side/overlap) 
                   Actually, we want the info card to be interactive.
                 */}
-                <div className="border border-border/50 p-8 md:p-10 rounded-xl pointer-events-auto h-full flex flex-col justify-center transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                <div className="border border-border/50 p-5 sm:p-8 md:p-10 rounded-xl pointer-events-auto h-full flex flex-col justify-center transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
 
-                  <h3 className="text-2xl font-bold text-white mb-6">Contact Information</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Contact Information</h3>
 
-                  <div className="space-y-8">
+                  <div className="space-y-5 sm:space-y-8">
                     {contactInfo.map((info, idx) => (
                       <a
                         key={idx}
                         href={info.href}
-                        className="flex items-start gap-4 group transition-all duration-300 hover:translate-x-2"
+                        className="flex items-start gap-3 sm:gap-4 group transition-all duration-300 hover:translate-x-2"
                       >
-                        <div className={cn("p-3 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary/30 group-hover:bg-primary/10 transition-colors", info.color)}>
-                          <info.icon className="w-6 h-6" />
+                        <div className={cn("p-2.5 sm:p-3 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary/30 group-hover:bg-primary/10 transition-colors shrink-0", info.color)}>
+                          <info.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground mb-1 group-hover:text-primary transition-colors">{info.label}</p>
-                          <p className="text-lg text-white font-medium truncate" title={info.value}>{info.value}</p>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-0.5 sm:mb-1 group-hover:text-primary transition-colors">{info.label}</p>
+                          <p className="text-sm sm:text-lg text-white font-medium break-words" title={info.value}>{info.value}</p>
                         </div>
                       </a>
                     ))}
                   </div>
 
-                  {/* Separator removed as requested */}
-
-                  <div className="mt-12">
-                    <h4 className="text-sm font-medium text-muted-foreground mb-4">Follow Me</h4>
-                    <div className="flex flex-wrap gap-3">
+                  <div className="mt-8 sm:mt-12">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 sm:mb-4">Follow Me</h4>
+                    <div className="flex flex-wrap gap-2.5 sm:gap-3">
                       {socialLinks.map((social, idx) => (
                         <a
                           key={idx}
                           href={social.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn("p-3 rounded-lg bg-white/5 border border-white/5 text-muted-foreground transition-all hover:scale-110", social.color)}
+                          className={cn("p-2.5 sm:p-3 rounded-lg bg-white/5 border border-white/5 text-muted-foreground transition-all hover:scale-110", social.color)}
                           title={social.label}
                         >
-                          <social.icon className="w-5 h-5" />
+                          <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </a>
                       ))}
                     </div>

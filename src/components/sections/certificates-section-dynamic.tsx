@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { Award, Calendar, ExternalLink, X, Download, BadgeCheck, Building2, Trophy, Medal } from "lucide-react";
+import { Award, Calendar, ChevronLeft, ChevronRight, ExternalLink, X, BadgeCheck, Building2, Trophy, Medal } from "lucide-react";
 import { useCertificateStore, Certificate } from "@/stores/useCertificateStore";
 import { convexClient } from '@/lib/convexClient';
 import { api } from '../../../convex/_generated/api';
@@ -25,18 +25,133 @@ export function CertificatesSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [currentCard, setCurrentCard] = useState(0);
+  const [showAllModal, setShowAllModal] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const savedScrollLeft = useRef(0);
 
   useEffect(() => {
     fetchCertificates();
     trackPageView();
-
-    // Subscribe to realtime changes
     const unsubscribe = subscribeToChanges();
+    return () => { unsubscribe(); };
+  }, []);
 
-    return () => {
-      unsubscribe();
-    };
-  }, [fetchCertificates, subscribeToChanges]);
+  // Restore scroll position after certificates re-render
+  useEffect(() => {
+    if (scrollRef.current && certificates.length > 0 && savedScrollLeft.current > 0) {
+      scrollRef.current.scrollLeft = savedScrollLeft.current;
+    }
+  }, [certificates]);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const cardsPerPage = isMobile ? 1 : 2;
+  const totalPages = Math.ceil(certificates.length / cardsPerPage);
+  const currentPage = Math.floor(currentCard / cardsPerPage);
+
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current || certificates.length === 0) return;
+    const el = scrollRef.current;
+    savedScrollLeft.current = el.scrollLeft;
+    const cardWidth = el.scrollWidth / certificates.length;
+    const idx = Math.round(el.scrollLeft / cardWidth);
+    setCurrentCard(Math.max(0, Math.min(idx, certificates.length - 1)));
+  }, [certificates.length]);
+
+  const scrollToCard = (idx: number) => {
+    if (!scrollRef.current || certificates.length === 0) return;
+    const clamped = Math.max(0, Math.min(idx, certificates.length - 1));
+    const el = scrollRef.current;
+    const cardWidth = el.scrollWidth / certificates.length;
+    el.scrollTo({ left: cardWidth * clamped, behavior: 'smooth' });
+  };
+
+  const scrollToPage = (page: number) => {
+    scrollToCard(page * cardsPerPage);
+  };
+
+  const goToPrevPage = () => { if (currentPage > 0) scrollToPage(currentPage - 1); };
+  const goToNextPage = () => { if (currentPage < totalPages - 1) scrollToPage(currentPage + 1); };
+
+  // Drag/swipe handling — works for both mouse (desktop) and touch (mobile)
+  const isDraggingScroll = useRef(false);
+  const hasDragged = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
+  const dragStartCard = useRef(0);
+  const momentumRaf = useRef<number>(0);
+
+  const startDrag = (clientX: number) => {
+    if (!scrollRef.current) return;
+    cancelAnimationFrame(momentumRaf.current);
+    isDraggingScroll.current = true;
+    hasDragged.current = false;
+    dragStartX.current = clientX;
+    dragScrollLeft.current = scrollRef.current.scrollLeft;
+    dragStartCard.current = currentCard;
+    scrollRef.current.style.scrollSnapType = 'none';
+    scrollRef.current.style.scrollBehavior = 'auto';
+    if (!isMobile) scrollRef.current.style.cursor = 'grabbing';
+  };
+
+  const moveDrag = (clientX: number) => {
+    if (!isDraggingScroll.current || !scrollRef.current) return;
+    const walk = clientX - dragStartX.current;
+    if (Math.abs(walk) > 5) hasDragged.current = true;
+    scrollRef.current.scrollLeft = dragScrollLeft.current - walk;
+  };
+
+  const endDrag = (clientX: number) => {
+    if (!isDraggingScroll.current || !scrollRef.current) return;
+    isDraggingScroll.current = false;
+    const el = scrollRef.current;
+    el.style.cursor = '';
+    el.style.scrollSnapType = '';
+    el.style.scrollBehavior = '';
+
+    const swipeDist = clientX - dragStartX.current;
+    const threshold = 30;
+    const startPage = Math.floor(dragStartCard.current / cardsPerPage);
+
+    if (Math.abs(swipeDist) > threshold) {
+      const targetPage = swipeDist < 0
+        ? Math.min(startPage + 1, totalPages - 1)
+        : Math.max(startPage - 1, 0);
+      scrollToPage(targetPage);
+    } else {
+      scrollToPage(startPage);
+    }
+  };
+
+  const onMouseDown = (e: ReactMouseEvent) => {
+    if (isMobile) return;
+    startDrag(e.pageX);
+  };
+  const onMouseMove = (e: ReactMouseEvent) => {
+    if (!isDraggingScroll.current) return;
+    e.preventDefault();
+    moveDrag(e.pageX);
+  };
+  const onMouseUp = (e: ReactMouseEvent) => {
+    endDrag(e.pageX);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startDrag(e.touches[0].clientX);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    moveDrag(e.touches[0].clientX);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    endDrag(e.changedTouches[0].clientX);
+  };
 
   const trackPageView = async () => {
     try {
@@ -56,35 +171,86 @@ export function CertificatesSection() {
     setZoomLevel(1);
   }, []);
 
+  const safeOpenModal = useCallback((index: number) => {
+    if (hasDragged.current) { hasDragged.current = false; return; }
+    openModalAt(index);
+  }, [openModalAt]);
+
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setZoomLevel(1);
-    setTimeout(() => {
-      setSelectedIndex(null);
-    }, 300);
+    setTimeout(() => { setSelectedIndex(null); }, 150);
   }, []);
-
-
 
   const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: shouldReduceMotion ? 0 : 0.18,
-      },
-    },
+    visible: { opacity: 1, transition: { duration: 0.6, staggerChildren: shouldReduceMotion ? 0 : 0.18 } },
   }), [shouldReduceMotion]);
 
   const itemVariants = useMemo(() => ({
     hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring" as const, stiffness: 80, damping: 12 },
-    },
+    visible: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 80, damping: 12 } },
   }), []);
+
+  // --- Shared card renderer ---
+  const renderCard = (cert: Certificate, index: number) => (
+    <div
+      onClick={() => safeOpenModal(index)}
+      className={`h-full relative border border-border/50 rounded-xl transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] overflow-hidden cursor-pointer group ${isMobile ? '' : ''}`}
+    >
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
+
+      <div className="relative h-[295px] sm:h-[359px] w-full overflow-hidden">
+        {cert.image_url ? (
+          <>
+            <OptimizedImage
+              src={cert.image_url}
+              alt={`${cert.title} certificate`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-black/5"
+              draggable={false}
+              fallbackIcon={<Award className="h-12 w-12 text-muted-foreground" />}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-muted/10">
+            <Award className="h-12 w-12 text-muted-foreground/30" />
+          </div>
+        )}
+        <div className="absolute top-2.5 left-2.5 z-10">
+          <Badge variant="secondary" className={`backdrop-blur-md border-0 shadow-lg text-[10px] sm:text-xs px-2 py-0.5 ${cert.type === 'recognition' ? 'bg-primary/90 text-primary-foreground' : 'bg-secondary/90 text-secondary-foreground'}`}>
+            {cert.type === 'recognition' ? <Trophy className="h-3 w-3 mr-1" /> : <Medal className="h-3 w-3 mr-1" />}
+            <span className="capitalize font-medium">{cert.type || 'Participation'}</span>
+          </Badge>
+        </div>
+        {cert.credential_url && (
+          <div className="absolute top-2.5 right-2.5 z-10">
+            <Badge variant="secondary" className="backdrop-blur-md bg-emerald-500/20 text-emerald-300 border-0 text-[10px] px-1.5 py-0.5">
+              <BadgeCheck className="h-3 w-3 mr-0.5" />Verified
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      <div className="p-3.5 sm:p-5 space-y-2 sm:space-y-3">
+        <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors duration-300 line-clamp-2">
+          {cert.title}
+        </h3>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-muted-foreground/70">
+          <span className="flex items-center gap-1">
+            <Building2 className="h-3 w-3 text-primary/60 shrink-0" />{cert.issuer}
+          </span>
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3 w-3 text-primary/60 shrink-0" />
+            {new Date(cert.issue_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+        {cert.description && (
+          <p className="text-[11px] sm:text-xs text-muted-foreground/60 leading-relaxed line-clamp-2">{cert.description}</p>
+        )}
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -156,140 +322,101 @@ export function CertificatesSection() {
               <p className="text-muted-foreground">Certificates will be displayed here once added</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {certificates.map((cert, index) => (
-                <motion.div
-                  key={cert.id}
-                  variants={itemVariants}
-                  className="transform-gpu"
-                  style={{ willChange: "transform, opacity" }}
-                >
-                  <div
-                    className="h-full relative border border-border/50 rounded-xl transition-all duration-500 ease-in-out hover:border-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] overflow-hidden group"
+            <>
+              {/* See All button */}
+              {certificates.length > 0 && (
+                <motion.div variants={itemVariants} className="flex justify-center mb-6 sm:mb-8">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllModal(true)}
+                    className="border-border/40 hover:border-cyan-400/40 hover:bg-cyan-400/5 text-muted-foreground hover:text-cyan-400 transition-all duration-300 text-xs sm:text-sm"
                   >
-                    {/* Accent gradient top bar */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
-
-                    {/* Type Overlay */}
-                    <div className="absolute top-3 left-3 z-30 pointer-events-none">
-                      <Badge variant="secondary" className={`backdrop-blur-md border-0 shadow-lg ${cert.type === 'recognition'
-                        ? 'bg-primary/90 text-primary-foreground shadow-primary/20'
-                        : 'bg-secondary/90 text-secondary-foreground shadow-secondary/20'
-                        }`}>
-                        {cert.type === 'recognition' ? (
-                          <Trophy className="h-3.5 w-3.5 mr-1.5" />
-                        ) : (
-                          <Medal className="h-3.5 w-3.5 mr-1.5" />
-                        )}
-                        <span className="capitalize font-medium text-xs">{cert.type || 'Participation'}</span>
-                      </Badge>
-                    </div>
-
-                    {/* Certificate Image */}
-                    {cert.image_url ? (
-                      <button
-                        type="button"
-                        className="relative h-48 w-full overflow-hidden will-change-transform transform-gpu text-left select-none"
-                        onClick={() => openModalAt(index)}
-                        aria-label={`View ${cert.title} certificate`}
-                        onContextMenu={(e) => e.preventDefault()}
-                      >
-                        <OptimizedImage
-                          src={cert.image_url}
-                          alt={`${cert.title} certificate`}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-black/5"
-                          draggable={false}
-                          fallbackIcon={<Award className="h-12 w-12 text-muted-foreground" />}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
-                      </button>
-                    ) : (
-                      <div className="relative h-48 w-full overflow-hidden flex items-center justify-center bg-muted/10 border-b border-border/10">
-                        <Award className="h-16 w-16 text-muted-foreground/30" />
-                      </div>
-                    )}
-
-                    {/* Content */}
-                    <div className="p-6">
-                      {/* Header with Icon */}
-                      <div className="flex flex-col gap-4 mb-4">
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-2">
-                          {/* Left Column: Title & Issuer - Span 7 */}
-                          <div className="md:col-span-7 flex flex-col gap-3">
-                            <h3 className="text-xl font-semibold text-foreground tracking-tight group-hover:text-primary transition-colors duration-300 leading-tight mb-2">
-                              {cert.title}
-                            </h3>
-
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2 text-sm text-foreground/90 font-medium">
-                                <Building2 className="h-4 w-4 text-primary shrink-0" />
-                                <span className="truncate">{cert.issuer}</span>
-                              </div>
-
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground/80">
-                                <Calendar className="h-4 w-4 text-primary/70 shrink-0" />
-                                <span className="whitespace-nowrap">
-                                  {new Date(cert.issue_date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="md:col-span-5 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 mt-2 md:mt-0">
-                            <div className="flex gap-4">
-                              {cert.credential_url && (
-                                <Badge variant="secondary" className="shrink-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] sm:text-xs px-2 py-0.5">
-                                  <BadgeCheck className="h-3 w-3 mr-1" />
-                                  Verified
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      {cert.description && (
-                        <p className="text-muted-foreground mb-6 line-clamp-2 text-sm leading-relaxed">
-                          {cert.description}
-                        </p>
-                      )}
-
-                      {/* Action Button */}
-                      <div className="flex gap-3 mt-auto pt-2">
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all duration-300"
-                          onClick={() => openModalAt(index)}
-                        >
-                          View Details
-                        </Button>
-                        {cert.credential_url && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-shrink-0 border-border/40 hover:border-primary/40 hover:bg-primary/5"
-                            asChild
-                          >
-                            <a href={cert.credential_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    <Award className="h-3.5 w-3.5 mr-2" />
+                    See All {certificates.length} Certificates
+                  </Button>
                 </motion.div>
-              ))}
-            </div>
+              )}
+
+              {/* Unified swipeable carousel — 1 card mobile, 2 cards desktop */}
+              <motion.div variants={itemVariants} className="relative overflow-hidden -mx-4 md:-mx-6 group/carousel">
+                {/* Arrow buttons for desktop */}
+                {!isMobile && totalPages > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goToPrevPage}
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white/70 hover:text-white backdrop-blur-sm transition-all duration-300 ${currentPage === 0 ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover/carousel:opacity-100'}`}
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goToNextPage}
+                      className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white/70 hover:text-white backdrop-blur-sm transition-all duration-300 ${currentPage === totalPages - 1 ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover/carousel:opacity-100'}`}
+                      aria-label="Next"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+                <div
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  onMouseDown={onMouseDown}
+                  onMouseMove={onMouseMove}
+                  onMouseUp={onMouseUp}
+                  onMouseLeave={onMouseUp}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                  className={`flex gap-4 md:gap-6 overflow-x-auto pb-4 scroll-smooth ${!isMobile ? 'cursor-grab' : ''}`}
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                    touchAction: 'pan-y',
+                    overscrollBehaviorX: 'contain',
+                    overscrollBehaviorY: 'auto',
+                    paddingLeft: isMobile ? 'calc((100vw - min(80vw, 340px)) / 2)' : '24px',
+                    paddingRight: isMobile ? 'calc((100vw - min(80vw, 340px)) / 2)' : '24px',
+                  }}
+                >
+                  {certificates.map((cert, index) => (
+                    <div
+                      key={cert.id}
+                      className="shrink-0"
+                      style={{ width: isMobile ? 'min(80vw, 340px)' : 'calc(50% - 12px)' }}
+                    >
+                      {renderCard(cert, index)}
+                    </div>
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <div className="flex items-center gap-1.5">
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-label={`Go to page ${i + 1}`}
+                          onClick={() => scrollToPage(i)}
+                          className={`rounded-full transition-all duration-300 ${i === currentPage ? "w-6 h-2 bg-cyan-400" : "w-2 h-2 bg-white/20 hover:bg-white/40"}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground/50">{currentPage + 1} / {totalPages}</span>
+                  </div>
+                )}
+              </motion.div>
+            </>
           )}
         </motion.div>
 
-        {/* Modal */}
-        < CertificatesModal
+        {/* Certificate detail modal */}
+        <CertificatesModal
           isOpen={isModalOpen}
           onOpenChange={(open) => (open ? setIsModalOpen(true) : closeModal())}
           certificates={certificates}
@@ -297,12 +424,116 @@ export function CertificatesSection() {
           zoomLevel={zoomLevel}
           setZoomLevel={setZoomLevel}
         />
-      </div >
-    </section >
+
+        {/* See All modal */}
+        <SeeAllCertificatesModal
+          isOpen={showAllModal}
+          onOpenChange={setShowAllModal}
+          certificates={certificates}
+          onSelect={(index) => {
+            openModalAt(index);
+          }}
+        />
+      </div>
+    </section>
   );
 }
 
 import { useLenis } from 'lenis/react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+// See All Certificates Modal — file-manager style grid
+function SeeAllCertificatesModal({
+  isOpen,
+  onOpenChange,
+  certificates,
+  onSelect,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  certificates: Certificate[];
+  onSelect: (index: number) => void;
+}) {
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (isOpen) {
+      lenis?.stop();
+      document.body.style.overflow = 'hidden';
+    } else {
+      lenis?.start();
+      document.body.style.overflow = '';
+    }
+    return () => { lenis?.start(); document.body.style.overflow = ''; };
+  }, [isOpen, lenis]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[92vw] max-w-3xl h-[75vh] flex flex-col border-white/[0.06] bg-[#000212]/95 backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl">
+        <div className="shrink-0 px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-white/[0.06]">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+              All Certificates ({certificates.length})
+            </DialogTitle>
+          </DialogHeader>
+        </div>
+
+        <div
+          className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 overscroll-contain"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            {certificates.map((cert, index) => (
+              <button
+                key={cert.id}
+                type="button"
+                onClick={() => onSelect(index)}
+                className="group text-left rounded-xl border border-border/50 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_8px_rgba(34,211,238,0.1)] transition-all duration-300"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/10">
+                  {cert.image_url ? (
+                    <OptimizedImage
+                      src={cert.image_url}
+                      alt={cert.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      draggable={false}
+                      fallbackIcon={<Award className="h-8 w-8 text-muted-foreground/30" />}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Award className="h-8 w-8 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  {cert.type && (
+                    <div className="absolute top-1.5 left-1.5">
+                      <Badge variant="secondary" className={`backdrop-blur-md border-0 text-[8px] px-1.5 py-0 ${cert.type === 'recognition' ? 'bg-primary/90 text-primary-foreground' : 'bg-secondary/90 text-secondary-foreground'}`}>
+                        {cert.type === 'recognition' ? <Trophy className="h-2.5 w-2.5 mr-0.5" /> : <Medal className="h-2.5 w-2.5 mr-0.5" />}
+                        <span className="capitalize">{cert.type}</span>
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                <div className="p-2.5 sm:p-3 h-[72px] sm:h-[76px] flex flex-col justify-start">
+                  <p className="text-[11px] sm:text-xs font-medium text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                    {cert.title}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground/60 mt-1 truncate">
+                    {cert.issuer}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Enhanced Modal
 export function CertificatesModal({

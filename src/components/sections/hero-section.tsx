@@ -52,14 +52,14 @@ export function HeroSection() {
     layoutEffect: false // Prevents warning during SSR/initial render
   });
 
-  // Scroll-based parallax transforms — direct transforms without spring for better performance
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
-  const avatarY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
-  const avatarScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
-  const floatingElementsY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  // Scroll-based parallax transforms — lighter on mobile for smooth feel
+  const backgroundY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "10%"] : ["0%", "25%"]);
+  const avatarY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "15%"] : ["0%", "35%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "8%"] : ["0%", "18%"]);
+  const avatarScale = useTransform(scrollYProgress, [0, 0.6], isMobile ? [1, 0.94] : [1, 0.88]);
+  const floatingElementsY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "20%"] : ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
-  const nameX = useTransform(scrollYProgress, [0, 0.5], ["0%", "-3%"]);
+  const nameX = useTransform(scrollYProgress, [0, 0.5], isMobile ? ["0%", "-1%"] : ["0%", "-3%"]);
   const fadeGradientOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7], [0, 0.8, 1]);
 
   useEffect(() => {
@@ -230,11 +230,11 @@ export function HeroSection() {
       <section
       ref={sectionRef}
       id="home"
-      className="min-h-[100svh] flex flex-col relative overflow-hidden"
+      className="min-h-[100svh] flex flex-col relative overflow-hidden bg-[#030014]"
     >
       {/* Background with Mesh Gradient */}
       <motion.div
-        className="absolute inset-0 bg-[#020617]"
+        className="absolute inset-0 bg-[#030014]"
         style={{ y: backgroundY, willChange: 'transform' }}
       >
         <div className="absolute inset-0 bg-gradient-hero opacity-20" />
@@ -244,8 +244,15 @@ export function HeroSection() {
             backgroundImage: `
               radial-gradient(at 15% 25%, hsl(202 85% 55% / 0.15) 0%, transparent 55%),
               radial-gradient(at 85% 15%, hsl(197 100% 70% / 0.1) 0%, transparent 55%),
-              radial-gradient(at 50% 85%, hsl(227 85% 18% / 0.3) 0%, transparent 55%)
+              radial-gradient(at 50% 60%, hsl(227 85% 18% / 0.2) 0%, transparent 50%)
             `
+          }}
+        />
+        {/* Fade-out mask so highlights don't create a hard edge at section bottom */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(to bottom, transparent 0%, transparent 60%, #030014 95%)',
           }}
         />
         {/* Subtle dot pattern */}
@@ -253,7 +260,9 @@ export function HeroSection() {
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
+            backgroundSize: '32px 32px',
+            maskImage: 'linear-gradient(to bottom, white 0%, white 70%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, white 0%, white 70%, transparent 100%)',
           }}
         />
       </motion.div>
@@ -270,10 +279,10 @@ export function HeroSection() {
             y: [0, 60, 0],
           }}
           transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-20 -right-20 w-[500px] h-[500px] rounded-full opacity-[0.07]"
+          className="absolute -bottom-40 -right-20 w-[500px] h-[500px] rounded-full opacity-[0.05]"
           style={{ 
             background: 'hsl(197 100% 70%)',
-            filter: 'blur(120px)',
+            filter: 'blur(150px)',
             willChange: 'transform'
           }}
         />
@@ -327,7 +336,7 @@ export function HeroSection() {
               {/* Description - Dynamic rotating phrases */}
               <motion.div
                 variants={fadeUp}
-                className="text-[15px] sm:text-base text-muted-foreground/70 mb-9 sm:mb-10 leading-[1.7] max-w-lg mx-auto lg:mx-0 min-h-[3.4em]"
+                className="text-[15px] sm:text-base text-muted-foreground/70 mb-9 sm:mb-10 leading-[1.7] max-w-lg mx-auto lg:mx-0 min-h-[5.1em] sm:min-h-[3.4em]"
               >
                 <AnimatePresence mode="wait">
                   <motion.p
@@ -342,45 +351,42 @@ export function HeroSection() {
                 </AnimatePresence>
               </motion.div>
 
-              {/* CTA Buttons - Enhanced sophisticated design */}
+              {/* CTA Buttons - Inline on mobile, styled on desktop */}
               <motion.div
                 variants={fadeUp}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-center lg:justify-start w-full sm:w-auto"
+                className="flex flex-row flex-wrap gap-4 sm:gap-6 items-center justify-center lg:justify-start"
               >
                 <Button
                   onClick={scrollToProjects}
-                  size="lg"
-                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
+                  variant="ghost"
+                  size="sm"
+                  className="group relative bg-transparent hover:bg-transparent text-muted-foreground/70 hover:text-primary !h-auto px-0 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                  <ExternalLink className="h-4 w-4 mr-2.5 transition-transform group-hover:rotate-[-8deg] relative z-10" />
-                  <span className="relative z-10">View My Projects</span>
+                  <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 transition-transform group-hover:rotate-[-8deg]" />
+                  <span>Projects</span>
                 </Button>
 
                 <Button
                   onClick={scrollToContact}
-                  variant="outline"
-                  size="lg"
-                  className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl w-full sm:w-auto overflow-hidden"
+                  variant="ghost"
+                  size="sm"
+                  className="group relative bg-transparent hover:bg-transparent text-muted-foreground/70 hover:text-primary !h-auto px-0 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                  <Mail className="h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 relative z-10" />
-                  <span className="relative z-10">Contact Me</span>
+                  <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 transition-transform group-hover:scale-110" />
+                  <span>Contact</span>
                 </Button>
 
-                {/* Download Resume - Responsive button (only show if resume exists) */}
                 {resumeUrl && (
                   <Button
                     onClick={handleDownloadCV}
                     disabled={isDownloading}
-                    variant="outline"
-                    size="lg"
-                    className="group relative bg-white/[0.02] hover:bg-white/[0.06] text-foreground hover:text-white border border-white/[0.08] hover:border-primary/40 !h-12 sm:!h-[52px] px-6 sm:px-8 text-sm font-semibold tracking-wide backdrop-blur-sm hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300 rounded-xl disabled:opacity-50 w-full sm:w-auto overflow-hidden"
+                    variant="ghost"
+                    size="sm"
+                    className="group relative bg-transparent hover:bg-transparent text-muted-foreground/70 hover:text-primary !h-auto px-0 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50"
                     title="Download Resume"
                   >
-                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                    <Download className="h-4 w-4 mr-2.5 transition-transform group-hover:scale-110 relative z-10" />
-                    <span className="relative z-10">Download Resume</span>
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 transition-transform group-hover:scale-110" />
+                    <span>Resume</span>
                   </Button>
                 )}
               </motion.div>
@@ -644,7 +650,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 2, duration: 1 }}
-            className="flex flex-col items-center mt-6 sm:mt-10 lg:mt-12 gap-2"
+            className="flex flex-col items-center mt-12 sm:mt-16 lg:mt-20 gap-2"
           >
             <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground/30 font-medium">Scroll</span>
             <motion.div
@@ -665,9 +671,9 @@ export function HeroSection() {
 
       {/* Bottom fade gradient for smooth transition to about section */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 h-40 sm:h-56 pointer-events-none z-20"
+        className="absolute bottom-0 left-0 right-0 h-72 sm:h-80 md:h-72 pointer-events-none z-20"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, rgba(3, 0, 20, 0.6) 40%, #030014 100%)',
+          background: 'linear-gradient(to bottom, transparent 0%, #030014 80%)',
           opacity: fadeGradientOpacity,
           willChange: 'opacity'
         }}

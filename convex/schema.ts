@@ -79,10 +79,8 @@ export default defineSchema({
     icon_url: v.string(),
     category: v.string(),
     description: v.optional(v.string()),
-    ring: v.union(v.literal("inner"), v.literal("outer")),
-    order_index: v.number(),
     is_active: v.boolean(),
-  }).index("by_order", ["order_index"]),
+  }),
 
   hero_settings: defineTable({
     type: v.union(

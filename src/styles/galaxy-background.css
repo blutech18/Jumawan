@@ -194,16 +194,46 @@
     opacity: 0.2;
   }
 
+  /* Override star patterns with many more points spread across larger tiles
+     to eliminate visible repetition on narrow screens */
   .stars-layer-1 {
-    background-size: 600px 300px;
+    background-image:
+      radial-gradient(1.5px 1.5px at 23px 87px, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(2px 2px at 189px 312px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 347px 58px, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 78px 445px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 412px 198px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 156px 623px, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 298px 789px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 67px 934px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 378px 1067px, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 234px 1189px, rgba(255, 255, 255, 0.5), transparent);
+    background-size: 450px 1300px;
   }
 
   .stars-layer-2 {
-    background-size: 550px 280px;
+    background-image:
+      radial-gradient(1px 1px at 45px 134px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1.5px 1.5px at 267px 47px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 134px 389px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 356px 567px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 89px 712px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 312px 856px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 178px 1023px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 23px 1178px, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 420px 1250px;
   }
 
   .stars-layer-3 {
-    background-size: 650px 320px;
+    background-image:
+      radial-gradient(1px 1px at 112px 67px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 289px 234px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 56px 478px, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 334px 623px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 167px 812px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 398px 945px, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 78px 1134px, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 480px 1200px;
   }
 }
 
@@ -220,14 +250,45 @@
   }
 
   .stars-layer-1 {
-    background-size: 500px 250px;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12px 156px, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 198px 34px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 87px 378px, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 267px 512px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 45px 689px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 312px 823px, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1.5px 1.5px at 156px 967px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 234px 1145px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 67px 1289px, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 178px 1423px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 289px 1567px, rgba(255, 255, 255, 0.6), transparent);
+    background-size: 370px 1650px;
   }
 
   .stars-layer-2 {
-    background-size: 450px 230px;
+    background-image:
+      radial-gradient(1px 1px at 134px 89px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 23px 267px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 278px 445px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 89px 612px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 234px 789px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 56px 956px, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 312px 1123px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 167px 1345px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 45px 1512px, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 350px 1600px;
   }
 
   .stars-layer-3 {
-    background-size: 550px 270px;
+    background-image:
+      radial-gradient(1px 1px at 67px 123px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 245px 289px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 134px 512px, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 23px 734px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 289px 889px, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 178px 1067px, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 56px 1234px, rgba(255, 255, 255, 0.4), transparent),
+      radial-gradient(1px 1px at 312px 1423px, rgba(255, 255, 255, 0.5), transparent);
+    background-size: 380px 1500px;
   }
 }

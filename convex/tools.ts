@@ -4,14 +4,14 @@ import { v } from "convex/values";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("tools").withIndex("by_order").collect();
+    return await ctx.db.query("tools").collect();
   },
 });
 
 export const listActive = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("tools").withIndex("by_order").collect();
+    const all = await ctx.db.query("tools").collect();
     return all.filter((t) => t.is_active);
   },
 });
@@ -29,8 +29,6 @@ export const create = mutation({
     icon_url: v.string(),
     category: v.string(),
     description: v.optional(v.string()),
-    ring: v.union(v.literal("inner"), v.literal("outer")),
-    order_index: v.number(),
     is_active: v.boolean(),
   },
   handler: async (ctx, args) => {
@@ -45,8 +43,6 @@ export const update = mutation({
     icon_url: v.optional(v.string()),
     category: v.optional(v.string()),
     description: v.optional(v.string()),
-    ring: v.optional(v.union(v.literal("inner"), v.literal("outer"))),
-    order_index: v.optional(v.number()),
     is_active: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -64,17 +60,6 @@ export const remove = mutation({
   args: { id: v.id("tools") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
-  },
-});
-
-export const reorder = mutation({
-  args: {
-    items: v.array(v.object({ id: v.id("tools"), order_index: v.number() })),
-  },
-  handler: async (ctx, args) => {
-    for (const item of args.items) {
-      await ctx.db.patch(item.id, { order_index: item.order_index });
-    }
   },
 });
 
@@ -257,5 +242,25 @@ export const fixBrokenIconUrls = mutation({
     }
 
     return { fixed, skipped, total: all.length };
+  },
+});
+
+// Migration: remove order_index and ring fields from all tools
+export const removeExtraFields = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("tools").collect();
+    let fixed = 0;
+    for (const tool of all) {
+      const doc = tool as any;
+      if (doc.order_index !== undefined || doc.ring !== undefined) {
+        // Replace document: delete and re-insert without extra fields
+        const { _id, _creationTime, order_index, ring, ...clean } = doc;
+        await ctx.db.delete(_id);
+        await ctx.db.insert("tools", clean);
+        fixed++;
+      }
+    }
+    return { fixed, total: all.length };
   },
 });
