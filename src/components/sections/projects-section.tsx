@@ -19,7 +19,7 @@ import { convexClient } from '@/lib/convexClient';
 import { api } from '../../../convex/_generated/api';
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { ExternalLink, FolderOpen, Github, X } from "lucide-react";
+import { ExternalLink, FolderOpen, Github, X, ZoomIn, ZoomOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useLenis } from "lenis/react";
 
@@ -28,7 +28,7 @@ export function ProjectsSection() {
   const { projects, loading, fetchProjects } = useProjectStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [currentCard, setCurrentCard] = useState(0);
   const [showAllModal, setShowAllModal] = useState(false);
@@ -174,7 +174,7 @@ export function ProjectsSection() {
   const openModalAt = useCallback((index: number) => {
     setSelectedIndex(index);
     setIsModalOpen(true);
-    setIsZoomed(true);
+    setZoomLevel(1);
   }, []);
 
   const safeOpenModal = useCallback((index: number) => {
@@ -184,7 +184,7 @@ export function ProjectsSection() {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setIsZoomed(false);
+    setZoomLevel(1);
     setTimeout(() => { setSelectedIndex(null); }, 150);
   }, []);
 
@@ -404,8 +404,8 @@ export function ProjectsSection() {
           selectedIndex={selectedIndex}
           onPrev={showPrev}
           onNext={showNext}
-          isZoomed={isZoomed}
-          setIsZoomed={setIsZoomed}
+          zoomLevel={zoomLevel}
+          setZoomLevel={setZoomLevel}
         />
 
         {/* See All modal */}
@@ -504,8 +504,8 @@ export function ProjectsModal({
   selectedIndex,
   onPrev,
   onNext,
-  isZoomed,
-  setIsZoomed,
+  zoomLevel,
+  setZoomLevel,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -513,10 +513,14 @@ export function ProjectsModal({
   selectedIndex: number | null;
   onPrev: () => void;
   onNext: () => void;
-  isZoomed: boolean;
-  setIsZoomed: (z: boolean) => void;
+  zoomLevel: number;
+  setZoomLevel: (z: number) => void;
 }) {
   const project = selectedIndex !== null ? projects[selectedIndex] : null;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const lenis = useLenis();
 
   useEffect(() => {
@@ -525,11 +529,42 @@ export function ProjectsModal({
     return () => { lenis?.start(); document.body.style.overflow = ''; };
   }, [isOpen, lenis]);
 
+  useEffect(() => {
+    if (!isOpen || zoomLevel === 1) {
+      setPosition({ x: 0, y: 0 });
+    }
+  }, [isOpen, zoomLevel, project]);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.min(Math.max(zoomLevel + delta, 1), 4);
+    setZoomLevel(newZoom);
+    if (newZoom === 1) setPosition({ x: 0, y: 0 });
+  }, [zoomLevel, setZoomLevel]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  }, [position]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  }, [isDragging, dragStart]);
+
+  const stopDragging = useCallback(() => {
+    setIsDragging(false);
+    setTimeout(() => { setPosition({ x: 0, y: 0 }); }, 50);
+  }, []);
+
   if (!project) return null;
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-[var(--surface-modal)]/90 backdrop-blur-xl supports-[backdrop-filter]:backdrop-blur-xl border-none">
+      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-[var(--surface-modal)] border-none">
         <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-[var(--overlay-bg)] to-transparent pointer-events-none">
           <div className="flex items-start justify-between gap-4 pointer-events-auto">
             <AlertDialogTitle className="text-base md:text-lg font-bold text-white/90 tracking-tight drop-shadow-md line-clamp-1 mt-1">
@@ -556,14 +591,28 @@ export function ProjectsModal({
         </AlertDialogHeader>
 
         <div className="flex flex-col h-[85vh] md:h-[80vh]">
-          <div className="relative flex-1 bg-[var(--surface-bg)]/95 flex items-center justify-center group overflow-hidden overscroll-contain">
+          <div
+            ref={containerRef}
+            className={`relative flex-1 bg-[var(--surface-bg)] flex items-center justify-center group overflow-hidden overscroll-contain ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={stopDragging}
+            onMouseLeave={stopDragging}
+            onDoubleClick={() => setZoomLevel(zoomLevel > 1 ? 1 : 2)}
+          >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 to-transparent opacity-50 pointer-events-none" />
             {project.image_url ? (
-              <div className="relative w-full h-full flex items-center justify-center" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+               <div className="relative w-full h-full flex items-center justify-center" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                 <OptimizedImage
                   src={project.image_url}
                   alt={project.title}
-                  className="select-none shadow-2xl pointer-events-none w-full h-full object-contain"
+                  className={`select-none shadow-2xl pointer-events-none w-full h-full object-contain ${isDragging ? '' : 'transition-transform duration-700'}`}
+                  style={{
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${zoomLevel})`,
+                    transformOrigin: 'center center',
+                    transitionTimingFunction: isDragging ? 'none' : 'cubic-bezier(0.19, 1, 0.22, 1)'
+                  }}
                   draggable={false}
                   fallbackIcon={<FolderOpen className="h-20 w-20 text-muted-foreground/30" />}
                 />
@@ -574,9 +623,34 @@ export function ProjectsModal({
                 <span className="text-sm font-medium">No Image Available</span>
               </div>
             )}
+
+            {/* Zoom controls */}
+            {project.image_url && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); const z = Math.max(zoomLevel - 0.25, 1); setZoomLevel(z); if (z === 1) setPosition({ x: 0, y: 0 }); }}
+                  className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <div className="bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] text-xs px-3 py-1.5 rounded-full border border-border/20 pointer-events-none min-w-[52px] text-center">
+                  {Math.round(zoomLevel * 100)}%
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setZoomLevel(Math.min(zoomLevel + 0.25, 4)); }}
+                  className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="shrink-0 bg-background/95 backdrop-blur-md border-t border-border/10 px-6 py-5 md:px-8 md:py-6">
+          <div className="shrink-0 bg-background border-t border-border/10 px-6 py-5 md:px-8 md:py-6">
             <div className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">{project.description}</p>
               <div className="flex flex-wrap gap-2">

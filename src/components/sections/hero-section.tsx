@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform, use
 import { ArrowDown, Download, ExternalLink, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHeroSettingsStore } from "@/stores/useHeroSettingsStore";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
@@ -23,7 +24,7 @@ export function HeroSection() {
   const avatarRef = useRef<HTMLDivElement>(null);
 
   // Fetch dynamic hero settings
-  const { badges, resumeUrl, profileImageUrl, hoverLogoUrl, fetchSettings } = useHeroSettingsStore();
+  const { badges, resumeUrl, profileImageUrl, hoverLogoUrl, fetchSettings, loading } = useHeroSettingsStore();
 
   // Detect mobile/tablet for performance optimization
   useEffect(() => {
@@ -51,7 +52,6 @@ export function HeroSection() {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
-    layoutEffect: false // Prevents warning during SSR/initial render
   });
 
   // Scroll-based parallax transforms — lighter on mobile for smooth feel
@@ -170,24 +170,38 @@ export function HeroSection() {
     });
 
     try {
-      // Fetch the file as a blob to force download for cross-origin URLs
-      const response = await fetch(resumeUrl);
+      // Derive extension from Content-Type after fetching, not from the URL
+      const filename = `Jumawan-Resume`; // extension appended after we know the type
+
+      // Proxy through Convex HTTP action to bypass CORS and force download
+      const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
+      const proxyUrl = `${convexSiteUrl}/downloadFile?url=${encodeURIComponent(resumeUrl)}&filename=${encodeURIComponent(filename)}`;
+
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error(`Server responded ${response.status}`);
+
       const blob = await response.blob();
 
-      // Get file extension from URL or content type
-      const urlParts = resumeUrl.split('.');
-      const extension = urlParts[urlParts.length - 1].split('?')[0] || 'png';
+      // Derive extension from actual Content-Type
+      const contentType = blob.type || response.headers.get('content-type') || '';
+      const mimeToExt: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'image/gif': 'gif',
+      };
+      const ext = mimeToExt[contentType.split(';')[0].trim()] || 'pdf';
+      const finalFilename = `${filename}.${ext}`;
 
-      // Create blob URL and trigger download
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `Jumawan-Resume.${extension}`;
+      link.download = finalFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Clean up blob URL
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Download failed:', error);
@@ -628,7 +642,9 @@ export function HeroSection() {
                   onMouseLeave={() => { if (!isMobile) setIsAvatarHovered(false); }}
                   onClick={() => { if (isMobile && hoverLogoUrl) setIsAvatarHovered(prev => !prev); }}
                 >
-                  {imageError ? (
+                  {loading ? (
+                    <Skeleton className="w-full h-full rounded-full bg-primary/10" />
+                  ) : imageError ? (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5 rounded-full">
                       <div className="text-4xl font-bold text-primary/60">CJ</div>
                     </div>

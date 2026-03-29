@@ -23,6 +23,7 @@ export default defineSchema({
     issue_date: v.string(),
     credential_id: v.optional(v.string()),
     credential_url: v.optional(v.string()),
+    verification_image_url: v.optional(v.string()),
     image_url: v.optional(v.string()),
     description: v.optional(v.string()),
     order_index: v.number(),
