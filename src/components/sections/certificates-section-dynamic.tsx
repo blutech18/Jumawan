@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef, type MouseEvent as ReactMouseEvent } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -342,7 +343,8 @@ export function CertificatesSection() {
   }
 
   return (
-    <section id="certificates" className="py-24 relative overflow-hidden">
+    <>
+      <section id="certificates" className="py-24 relative overflow-hidden">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div
           initial="hidden"
@@ -494,14 +496,14 @@ export function CertificatesSection() {
             openModalAt(index);
           }}
         />
-
-        {/* Verification Image Modal */}
-        <VerificationImageModal
-          imageUrl={verificationImageUrl}
-          onClose={() => setVerificationImageUrl(null)}
-        />
       </div>
     </section>
+
+      <VerificationImageModal
+        imageUrl={verificationImageUrl}
+        onClose={() => setVerificationImageUrl(null)}
+      />
+    </>
   );
 }
 
@@ -604,7 +606,7 @@ function SeeAllCertificatesModal({
   );
 }
 
-// Verification Image Modal — zoom, drag, double-click like the detail modal
+// Verification Image Modal — same visual design as resume modal
 function VerificationImageModal({
   imageUrl,
   onClose,
@@ -616,13 +618,24 @@ function VerificationImageModal({
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
   const lenis = useLenis();
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (imageUrl) { lenis?.stop(); document.body.style.overflow = 'hidden'; }
     else { lenis?.start(); document.body.style.overflow = ''; }
     return () => { lenis?.start(); document.body.style.overflow = ''; };
   }, [imageUrl, lenis]);
+
+  // Esc to close
+  useEffect(() => {
+    if (!imageUrl) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [imageUrl, onClose]);
 
   useEffect(() => { setZoom(1); setPos({ x: 0, y: 0 }); }, [imageUrl]);
 
@@ -649,75 +662,143 @@ function VerificationImageModal({
     setTimeout(() => setPos({ x: 0, y: 0 }), 50);
   }, []);
 
-  return (
-    <AlertDialog open={!!imageUrl} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-[var(--surface-modal)] border-none">
-        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-[var(--overlay-bg)] to-transparent pointer-events-none">
-          <div className="flex items-center justify-between pointer-events-auto">
-            <AlertDialogTitle className="text-base md:text-lg font-bold text-white/90 drop-shadow-md">
-              Verification Proof
-            </AlertDialogTitle>
-            <AlertDialogCancel asChild>
-              <button className="p-2 rounded-full bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm">
-                <X className="h-4 w-4" />
-              </button>
-            </AlertDialogCancel>
-          </div>
-        </AlertDialogHeader>
+  if (!mounted) return null;
 
-        <div
-          className={`relative h-[85vh] md:h-[80vh] bg-[var(--surface-bg)] flex items-center justify-center overflow-hidden overscroll-contain ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-          onWheel={onWheel}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={stopDrag}
-          onMouseLeave={stopDrag}
-          onDoubleClick={() => { const next = zoom > 1 ? 1 : 2; setZoom(next); if (next === 1) setPos({ x: 0, y: 0 }); }}
+  return createPortal(
+    <AnimatePresence>
+      {imageUrl && (
+        <motion.div
+          key="verification-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5"
+          style={{ background: 'rgba(5, 10, 24, 0.85)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 to-transparent opacity-50 pointer-events-none" />
+          {/* Blur layer — separate so card content is never blurred on mobile */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }} />
 
-          {imageUrl && (
-            <div className="relative w-full h-full flex items-center justify-center" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-              <img
-                src={imageUrl}
-                alt="Verification proof"
-                className={`select-none shadow-2xl pointer-events-none ${dragging ? '' : 'transition-transform duration-700'}`}
-                style={{
-                  transform: `translate(${pos.x}px, ${pos.y}px) scale(${zoom})`,
-                  transformOrigin: 'center center',
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  transitionTimingFunction: dragging ? 'none' : 'cubic-bezier(0.19, 1, 0.22, 1)',
-                }}
-                draggable={false}
-              />
+          <motion.div
+            key="verification-card"
+            initial={{ opacity: 0, scale: 0.93, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.93, y: 20 }}
+            transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="relative w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-4xl flex flex-col rounded-xl sm:rounded-2xl"
+            style={{
+              background: 'var(--surface-modal)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-modal)',
+              height: 'min(85dvh, 85vh)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Floating header */}
+            <div
+              className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 pointer-events-none"
+              style={{ background: 'linear-gradient(to bottom, var(--modal-header-bg, hsl(220 40% 6% / 0.95)) 0%, transparent 100%)' }}
+            >
+              <div className="flex items-center gap-2.5 pointer-events-auto">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'hsl(202 85% 55% / 0.15)', border: '1px solid hsl(202 85% 55% / 0.25)' }}
+                >
+                  <BadgeCheck className="w-3.5 h-3.5" style={{ color: 'hsl(202 85% 65%)' }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground/90 leading-tight">Verification Proof</p>
+                  <p className="text-[10px] sm:text-[11px] text-foreground/50">Certificate verification image</p>
+                </div>
+              </div>
+              <div className="pointer-events-auto">
+                <button
+                  onClick={onClose}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-95 hover:bg-muted/10"
+                  style={{ background: 'var(--modal-btn-bg)', border: '1px solid var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                >
+                  <X className="w-4 h-4 text-foreground/70" />
+                </button>
+              </div>
             </div>
-          )}
 
-          {/* Zoom controls */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-            <button
-              type="button"
-              onClick={() => { const z = Math.max(zoom - 0.25, 1); setZoom(z); if (z === 1) setPos({ x: 0, y: 0 }); }}
-              className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
+            {/* Image / zoom area */}
+            <div
+              className={`relative flex-1 min-h-0 bg-[var(--surface-bg)] flex items-center justify-center overflow-hidden overscroll-contain ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              onWheel={onWheel}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={stopDrag}
+              onMouseLeave={stopDrag}
+              onTouchStart={(e) => {
+                if (e.touches.length === 1) {
+                  setDragging(true);
+                  setDragStart({ x: e.touches[0].clientX - pos.x, y: e.touches[0].clientY - pos.y });
+                }
+              }}
+              onTouchMove={(e) => {
+                if (!dragging || e.touches.length !== 1) return;
+                e.preventDefault();
+                setPos({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
+              }}
+              onTouchEnd={stopDrag}
+              onDoubleClick={() => { const next = zoom > 1 ? 1 : 2; setZoom(next); if (next === 1) setPos({ x: 0, y: 0 }); }}
             >
-              <ZoomOut className="h-4 w-4" />
-            </button>
-            <div className="bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] text-xs px-3 py-1.5 rounded-full border border-border/20 pointer-events-none min-w-[52px] text-center">
-              {Math.round(zoom * 100)}%
+              {/* Radial glow */}
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at center, hsl(202 85% 30% / 0.06) 0%, transparent 70%)' }} />
+
+              <div
+                className="relative w-full h-full flex items-center justify-center"
+                style={{ padding: '52px 12px 48px' }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              >
+                <img
+                  src={imageUrl}
+                  alt="Verification proof"
+                  draggable={false}
+                  className={`select-none max-w-full max-h-full object-contain shadow-2xl pointer-events-none ${dragging ? '' : 'transition-transform duration-700'}`}
+                  style={{
+                    transform: `translate(${pos.x}px, ${pos.y}px) scale(${zoom})`,
+                    transformOrigin: 'center center',
+                    transitionTimingFunction: dragging ? 'none' : 'cubic-bezier(0.19, 1, 0.22, 1)',
+                  }}
+                />
+              </div>
+
+              {/* Zoom controls */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+                <button
+                  type="button"
+                  onClick={() => { const z = Math.max(zoom - 0.25, 1); setZoom(z); if (z === 1) setPos({ x: 0, y: 0 }); }}
+                  className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                  style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                  title="Zoom out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <div
+                  className="text-xs px-3 py-1.5 rounded-full border pointer-events-none min-w-[52px] text-center backdrop-blur-sm"
+                  style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                >
+                  {Math.round(zoom * 100)}%
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setZoom(Math.min(zoom + 0.25, 4))}
+                  className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                  style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                  title="Zoom in"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setZoom(Math.min(zoom + 0.25, 4))}
-              className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 }
 
@@ -810,35 +891,19 @@ export function CertificatesModal({
       <AlertDialogContent className="w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[1000px] p-0 overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl ring-1 ring-cyan-500/20 bg-[var(--surface-modal)] border-none">
 
         {/* Header - Transparent and Minimal */}
-        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-[var(--overlay-bg)] to-transparent pointer-events-none">
+        <AlertDialogHeader className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-[var(--modal-header-bg)] to-transparent pointer-events-none">
           <div className="flex items-start justify-between gap-4 pointer-events-auto">
             {/* Title with consistent typography */}
-            <AlertDialogTitle className="text-base md:text-lg font-bold text-white/90 tracking-tight drop-shadow-md line-clamp-1 mt-1">
+            <AlertDialogTitle className="text-base md:text-lg font-bold text-foreground/90 tracking-tight drop-shadow-md line-clamp-1 mt-1">
               {cert.title}
             </AlertDialogTitle>
 
             {/* Action Buttons - Premium styling */}
             <div className="flex items-center gap-2">
-              {(cert.credential_url || cert.verification_image_url) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (cert.verification_image_url && onVerificationImage) {
-                      onVerificationImage(cert.verification_image_url);
-                    } else if (cert.credential_url) {
-                      window.open(cert.credential_url, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                  className="p-2 rounded-full bg-[var(--overlay-light)] hover:bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm"
-                  title="View Verification"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-              )}
-
               <AlertDialogCancel asChild>
                 <button
-                  className="p-2 rounded-full bg-[var(--overlay-light)] hover:bg-[var(--overlay-light)] text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-300 backdrop-blur-sm"
+                  className="p-2 rounded-full transition-all duration-300 backdrop-blur-sm hover:bg-muted/10 border"
+                  style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
                   title="Close"
                 >
                   <X className="h-4 w-4" />
@@ -893,18 +958,23 @@ export function CertificatesModal({
               <button
                 type="button"
                 onClick={() => { const z = Math.max(zoomLevel - 0.25, 1); setZoomLevel(z); if (z === 1) setPosition({ x: 0, y: 0 }); }}
-                className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
+                className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
                 title="Zoom out"
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
-              <div className="bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] text-xs px-3 py-1.5 rounded-full border border-border/20 pointer-events-none min-w-[52px] text-center">
+              <div
+                className="text-xs px-3 py-1.5 rounded-full border pointer-events-none min-w-[52px] text-center backdrop-blur-sm"
+                style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+              >
                 {Math.round(zoomLevel * 100)}%
               </div>
               <button
                 type="button"
                 onClick={() => setZoomLevel(Math.min(zoomLevel + 0.25, 4))}
-                className="p-1.5 rounded-full bg-[var(--overlay-light)] backdrop-blur-sm text-[var(--text-on-overlay)] hover:text-[var(--text-on-overlay-hover)] transition-all duration-200 border border-border/20"
+                className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
                 title="Zoom in"
               >
                 <ZoomIn className="h-4 w-4" />

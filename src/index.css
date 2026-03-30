@@ -91,6 +91,11 @@ All colors MUST be HSL.
     --shadow-elegant: 0 20px 40px -12px hsl(var(--navy-900) / 0.8);
     --shadow-glow: 0 0 20px hsl(var(--sky-400) / 0.2);
     --shadow-card: 0 8px 32px -8px hsl(var(--navy-900) / 0.6);
+    --shadow-modal: 0 32px 80px hsl(0 0% 0% / 0.65), inset 0 1px 0 hsl(202 85% 70% / 0.06);
+    --modal-header-bg: hsl(220 40% 6% / 0.95);
+    --modal-btn-bg: hsl(0 0% 100% / 0.06);
+    --modal-btn-border: hsl(0 0% 100% / 0.1);
+    --modal-btn-text: hsl(0 0% 100% / 0.5);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -208,6 +213,11 @@ All colors MUST be HSL.
     --shadow-elegant: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
     --shadow-glow: 0 0 20px hsl(var(--sky-400) / 0.15);
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+    --shadow-modal: 0 16px 40px hsl(0 0% 0% / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.5);
+    --modal-header-bg: hsl(0 0% 100% / 0.95);
+    --modal-btn-bg: hsl(0 0% 0% / 0.04);
+    --modal-btn-border: hsl(0 0% 0% / 0.08);
+    --modal-btn-text: hsl(0 0% 0% / 0.6);
   }
 }
 

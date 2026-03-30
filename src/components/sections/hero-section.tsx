@@ -1,13 +1,15 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform, useSpring } from "framer-motion";
-import { ArrowDown, Download, ExternalLink, Mail } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { Download, ExternalLink, FileText, Mail, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHeroSettingsStore } from "@/stores/useHeroSettingsStore";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
+import { jsPDF } from "jspdf";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -16,11 +18,22 @@ export function HeroSection() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewBlobType, setPreviewBlobType] = useState<string>('');
+  const [previewLoading, setPreviewLoading] = useState(false);
+  // Resume modal zoom + drag — same state pattern as verification modal
+  const [resumeZoom, setResumeZoom] = useState(1);
+  const [resumePos, setResumePos] = useState({ x: 0, y: 0 });
+  const [resumeDragStart, setResumeDragStart] = useState({ x: 0, y: 0 });
+  const [resumeDragging, setResumeDragging] = useState(false);
+  const resumeContainerRef = useRef<HTMLDivElement>(null);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [animationsReady, setAnimationsReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAvatarHovered, setIsAvatarHovered] = useState(false);
+  const [isProfileImageLoaded, setIsProfileImageLoaded] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
   // Fetch dynamic hero settings
@@ -128,6 +141,69 @@ export function HeroSection() {
     return () => document.removeEventListener('touchstart', handleOutsideTap);
   }, [isMobile, isAvatarHovered]);
 
+  // Close resume modal on Esc key + reset zoom
+  useEffect(() => {
+    if (!isResumeModalOpen) {
+      setResumeZoom(1);
+      setResumePos({ x: 0, y: 0 });
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsResumeModalOpen(false);
+        setResumeZoom(1);
+        setResumePos({ x: 0, y: 0 });
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isResumeModalOpen]);
+
+  // Fetch file as a blob URL when modal opens so the iframe uses a same-origin
+  // blob: URL — this bypasses browser ad/tracker blockers (e.g. Opera) that
+  // block the convex.site domain when loaded as an iframe src.
+  useEffect(() => {
+    if (!isResumeModalOpen) {
+      // Revoke old blob URL to free memory
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+        setPreviewBlobUrl(null);
+      }
+      return;
+    }
+
+    const buildPreview = async () => {
+      setPreviewLoading(true);
+      try {
+        const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
+        let fetchUrl = resumeUrl;
+        try {
+          const parsed = new URL(resumeUrl);
+          const sid = parsed.searchParams.get('storageId');
+          if (sid && convexSiteUrl) {
+            fetchUrl = `${convexSiteUrl}/downloadByStorageId?storageId=${encodeURIComponent(sid)}&filename=preview`;
+          }
+        } catch { /* use resumeUrl as-is */ }
+
+        const res = await fetch(fetchUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        setPreviewBlobType(blob.type || '');
+        const url = URL.createObjectURL(blob);
+        setPreviewBlobUrl(url);
+      } catch (err) {
+        console.warn('Preview fetch failed, falling back to direct URL', err);
+        setPreviewBlobType('');
+        setPreviewBlobUrl(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+
+    buildPreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResumeModalOpen]);
+
   // Delay heavy animations until after initial render
   useEffect(() => {
     // Use requestIdleCallback if available, otherwise setTimeout
@@ -153,68 +229,120 @@ export function HeroSection() {
     scrollToSection("contact");
   };
 
-  const handleDownloadCV = async () => {
-    if (isDownloading) {
-      toast({
-        title: "Download already in progress",
-        description: "Your CV download has already started. Please check your browser's downloads.",
-      });
-      return;
+  // Extract storageId from a Convex getImage URL if present
+  const extractStorageId = (url: string): string | null => {
+    try {
+      const parsed = new URL(url);
+      return parsed.searchParams.get('storageId');
+    } catch {
+      return null;
     }
+  };
 
+  const handleOpenResume = () => {
+    setIsResumeModalOpen(true);
+  };
+
+  const handleModalDownload = async () => {
+    if (isDownloading) return;
     setIsDownloading(true);
 
     const currentToast = toast({
-      title: "Downloading CV",
-      description: "Resume download has started.",
+      title: "Downloading Resume",
+      description: "Preparing your download…",
     });
 
     try {
-      // Derive extension from Content-Type after fetching, not from the URL
-      const filename = `Jumawan-Resume`; // extension appended after we know the type
-
-      // Proxy through Convex HTTP action to bypass CORS and force download
       const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
-      const proxyUrl = `${convexSiteUrl}/downloadFile?url=${encodeURIComponent(resumeUrl)}&filename=${encodeURIComponent(filename)}`;
+      const storageId = extractStorageId(resumeUrl);
 
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error(`Server responded ${response.status}`);
+      let downloadUrl: string;
+
+      if (storageId && convexSiteUrl) {
+        // Pull the original filename from the URL if the admin encoded it (new format)
+        let storedFilename = 'Jumawan-Resume';
+        try {
+          const parsed = new URL(resumeUrl);
+          const fn = parsed.searchParams.get('filename');
+          if (fn) storedFilename = decodeURIComponent(fn);
+        } catch { /* ignore */ }
+        // Use the direct storage endpoint — no self-referencing fetch
+        downloadUrl = `${convexSiteUrl}/downloadByStorageId?storageId=${encodeURIComponent(storageId)}&filename=${encodeURIComponent(storedFilename)}`;
+      } else if (resumeUrl.startsWith('/') && !resumeUrl.startsWith('//')) {
+        // Local public file — create an anchor with same-origin href
+        const link = document.createElement('a');
+        link.href = resumeUrl;
+        link.download = 'Jumawan-Resume';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      } else {
+        // Absolute external URL — open in new tab (cross-origin download attr doesn't work)
+        window.open(resumeUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      const response = await fetch(downloadUrl);
+      if (!response.ok) throw new Error(`Status ${response.status}`);
 
       const blob = await response.blob();
+      const contentType = blob.type || '';
+      const isImage = contentType.startsWith('image/');
 
-      // Derive extension from actual Content-Type
-      const contentType = blob.type || response.headers.get('content-type') || '';
-      const mimeToExt: Record<string, string> = {
-        'application/pdf': 'pdf',
-        'image/jpeg': 'jpg',
-        'image/jpg': 'jpg',
-        'image/png': 'png',
-        'image/webp': 'webp',
-        'image/gif': 'gif',
-      };
-      const ext = mimeToExt[contentType.split(';')[0].trim()] || 'pdf';
-      const finalFilename = `${filename}.${ext}`;
+      if (isImage) {
+        // Convert image to PDF using jsPDF so visitors always get a .pdf file
+        const imgDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
 
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = finalFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+        // Determine image dimensions via an HTMLImageElement
+        const imgEl = new Image();
+        await new Promise<void>((resolve) => {
+          imgEl.onload = () => resolve();
+          imgEl.onerror = () => resolve(); // proceed even if we can't measure
+          imgEl.src = imgDataUrl;
+        });
+
+        const imgW = imgEl.naturalWidth || 595;
+        const imgH = imgEl.naturalHeight || 842;
+        const pdfW = 210; // A4 mm
+        const pdfH = Math.round((imgH / imgW) * pdfW);
+
+        const pdf = new jsPDF({
+          orientation: pdfW >= pdfH ? 'landscape' : 'portrait',
+          unit: 'mm',
+          format: [pdfW, pdfH],
+        });
+        pdf.addImage(imgDataUrl, 'PNG', 0, 0, pdfW, pdfH);
+        pdf.save('Jumawan-Resume.pdf');
+      } else {
+        // PDF or other document — download directly
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = 'Jumawan-Resume.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
     } catch (error) {
       console.error('Download failed:', error);
+      // Absolute fallback — open in new tab
+      window.open(resumeUrl, '_blank', 'noopener,noreferrer');
       toast({
-        title: "Download Failed",
-        description: "Could not download the resume. Please try again.",
-        variant: "destructive",
+        title: "Opening in new tab",
+        description: "Direct download unavailable — opening in a new tab.",
       });
     } finally {
       setTimeout(() => {
         currentToast.dismiss();
         setIsDownloading(false);
-      }, 2500);
+      }, 2000);
     }
   };
 
@@ -406,14 +534,13 @@ export function HeroSection() {
 
                 {resumeUrl && (
                   <Button
-                    onClick={handleDownloadCV}
-                    disabled={isDownloading}
+                    onClick={handleOpenResume}
                     variant="ghost"
                     size="sm"
-                    className="group relative bg-transparent hover:bg-transparent text-muted-foreground/70 hover:text-primary !h-auto px-0 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 disabled:opacity-50"
-                    title="Download Resume"
+                    className="group relative bg-transparent hover:bg-transparent text-muted-foreground/70 hover:text-primary !h-auto px-0 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300"
+                    title="View Resume"
                   >
-                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 transition-transform group-hover:scale-110" />
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 transition-transform group-hover:scale-110" />
                     <span>Resume</span>
                   </Button>
                 )}
@@ -650,15 +777,19 @@ export function HeroSection() {
                     </div>
                   ) : (
                     <div className="relative w-full h-full">
+                      {!isProfileImageLoaded && (
+                        <Skeleton className="absolute inset-0 w-full h-full rounded-full bg-primary/10 z-10" />
+                      )}
                       {/* Profile image */}
                       <motion.img
                         src={profileImageUrl}
                         alt="Cristan Jade Jumawan - Full Stack Developer"
-                        className="absolute inset-0 w-full h-full object-cover rounded-full"
+                        className={`absolute inset-0 w-full h-full object-cover rounded-full transition-opacity duration-300 ${!isProfileImageLoaded ? 'opacity-0' : 'opacity-100'}`}
                         loading="eager"
+                        onLoad={() => setIsProfileImageLoaded(true)}
                         animate={{
-                          opacity: isAvatarHovered && hoverLogoUrl ? 0 : 1,
-                          scale: isAvatarHovered && hoverLogoUrl ? 0.9 : 1,
+                          opacity: (isAvatarHovered && hoverLogoUrl && isProfileImageLoaded) ? 0 : (!isProfileImageLoaded ? 0 : 1),
+                          scale: (isAvatarHovered && hoverLogoUrl && isProfileImageLoaded) ? 0.9 : 1,
                         }}
                         transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                         onError={() => setImageError(true)}
@@ -667,10 +798,11 @@ export function HeroSection() {
                       {/* Hover logo (BluTech) */}
                       {hoverLogoUrl && (
                         <motion.div
-                          className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--surface-bg)]/80 backdrop-blur-sm"
+                          className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--surface-bg)]/80 backdrop-blur-sm z-20"
+                          initial={{ opacity: 0, scale: 1.1 }}
                           animate={{
-                            opacity: isAvatarHovered ? 1 : 0,
-                            scale: isAvatarHovered ? 1 : 1.1,
+                            opacity: (isAvatarHovered && isProfileImageLoaded) ? 1 : 0,
+                            scale: (isAvatarHovered && isProfileImageLoaded) ? 1 : 1.1,
                           }}
                           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                           style={{ willChange: 'transform, opacity' }}
@@ -679,9 +811,10 @@ export function HeroSection() {
                             src={hoverLogoUrl}
                             alt="BluTech Logo"
                             className="w-[65%] h-[65%] object-contain drop-shadow-[0_0_20px_hsl(202,85%,55%,0.4)]"
+                            initial={{ scale: 0.7, rotate: -10 }}
                             animate={{
-                              scale: isAvatarHovered ? 1 : 0.7,
-                              rotate: isAvatarHovered ? 0 : -10,
+                              scale: (isAvatarHovered && isProfileImageLoaded) ? 1 : 0.7,
+                              rotate: (isAvatarHovered && isProfileImageLoaded) ? 0 : -10,
                             }}
                             transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
                             style={{ willChange: 'transform' }}
@@ -745,6 +878,209 @@ export function HeroSection() {
         }}
       />
     </section>
+
+      {/* ── Resume Preview Modal (certificate-style: zoom / pan / drag) ── */}
+      <AnimatePresence>
+        {isResumeModalOpen && (() => {
+          const isImage = previewBlobType.startsWith('image/');
+
+          // Handlers mirror verification modal exactly (state-based dragStart, useCallback-equivalent inline)
+          const handleWheel = (e: React.WheelEvent) => {
+            e.preventDefault(); e.stopPropagation();
+            const next = Math.min(Math.max(resumeZoom + (e.deltaY > 0 ? -0.1 : 0.1), 1), 4);
+            setResumeZoom(next);
+            if (next === 1) setResumePos({ x: 0, y: 0 });
+          };
+          const handleMouseDown = (e: React.MouseEvent) => {
+            setResumeDragging(true);
+            setResumeDragStart({ x: e.clientX - resumePos.x, y: e.clientY - resumePos.y });
+          };
+          const handleMouseMove = (e: React.MouseEvent) => {
+            if (!resumeDragging) return;
+            e.preventDefault();
+            setResumePos({ x: e.clientX - resumeDragStart.x, y: e.clientY - resumeDragStart.y });
+          };
+          const stopDrag = () => {
+            setResumeDragging(false);
+            setTimeout(() => setResumePos({ x: 0, y: 0 }), 50);
+          };
+          const zoomOut = () => { const z = Math.max(resumeZoom - 0.25, 1); setResumeZoom(z); if (z === 1) setResumePos({ x: 0, y: 0 }); };
+          const zoomIn = () => setResumeZoom(Math.min(resumeZoom + 0.25, 4));
+
+          return (
+            <motion.div
+              key="resume-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5"
+              style={{ background: 'rgba(5, 10, 24, 0.85)' }}
+              onClick={(e) => { if (e.target === e.currentTarget) { setIsResumeModalOpen(false); setResumeZoom(1); setResumePos({ x: 0, y: 0 }); } }}
+            >
+              {/* Blur layer — separate from card so card content is never blurred */}
+              <div className="absolute inset-0 pointer-events-none" style={{ backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }} />
+              <motion.div
+                  key="resume-modal-content"
+                  initial={{ opacity: 0, scale: 0.93, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.93, y: 20 }}
+                  transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="relative w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-4xl flex flex-col rounded-xl sm:rounded-2xl"
+                  style={{
+                    background: 'var(--surface-modal)',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-modal)',
+                    height: 'min(85dvh, 85vh)',
+                    overflow: 'hidden',
+                  }}
+                >
+                {/* ── Header ── */}
+                <div
+                  className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 pointer-events-none"
+                  style={{ background: 'linear-gradient(to bottom, var(--modal-header-bg, hsl(220 40% 6% / 0.95)) 0%, transparent 100%)' }}
+                >
+                  {/* Title */}
+                  <div className="flex items-center gap-2.5 pointer-events-auto">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'hsl(202 85% 55% / 0.15)', border: '1px solid hsl(202 85% 55% / 0.25)' }}
+                    >
+                      <FileText className="w-3.5 h-3.5" style={{ color: 'hsl(202 85% 65%)' }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground/90 leading-tight">Jumawan — Resume</p>
+                      <p className="text-[10px] sm:text-[11px] text-foreground/50">Cristan Jade Jumawan</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pointer-events-auto">
+                    <button
+                      onClick={handleModalDownload}
+                      disabled={isDownloading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 active:scale-95 hover:bg-muted/10 border"
+                      style={{
+                        background: 'var(--modal-btn-bg)',
+                        borderColor: 'var(--modal-btn-border)',
+                        color: 'var(--modal-btn-text)',
+                      }}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{isDownloading ? 'Saving…' : 'Download'}</span>
+                    </button>
+                    <button
+                      onClick={() => { setIsResumeModalOpen(false); setResumeZoom(1); setResumePos({ x: 0, y: 0 }); }}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 active:scale-95 hover:bg-muted/10 border"
+                      style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                    >
+                      <X className="w-4 h-4 text-foreground/70" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── Preview area ── */}
+                <div
+                  ref={resumeContainerRef}
+                  className={`relative flex-1 min-h-0 bg-[var(--surface-bg)] flex items-center justify-center overflow-hidden overscroll-contain ${
+                    resumeDragging ? 'cursor-grabbing' : isImage ? 'cursor-grab' : 'cursor-default'
+                  }`}
+                  style={{ overflow: 'hidden' }}
+                  onWheel={isImage ? handleWheel : undefined}
+                  onMouseDown={isImage ? handleMouseDown : undefined}
+                  onMouseMove={isImage ? handleMouseMove : undefined}
+                  onMouseUp={isImage ? stopDrag : undefined}
+                  onMouseLeave={isImage ? stopDrag : undefined}
+                  onTouchStart={isImage ? (e) => {
+                    if (e.touches.length === 1) {
+                      setResumeDragging(true);
+                      setResumeDragStart({ x: e.touches[0].clientX - resumePos.x, y: e.touches[0].clientY - resumePos.y });
+                    }
+                  } : undefined}
+                  onTouchMove={isImage ? (e) => {
+                    if (!resumeDragging || e.touches.length !== 1) return;
+                    e.preventDefault();
+                    setResumePos({ x: e.touches[0].clientX - resumeDragStart.x, y: e.touches[0].clientY - resumeDragStart.y });
+                  } : undefined}
+                  onTouchEnd={isImage ? stopDrag : undefined}
+                  onDoubleClick={isImage ? () => { const next = resumeZoom > 1 ? 1 : 2; setResumeZoom(next); if (next === 1) setResumePos({ x: 0, y: 0 }); } : undefined}
+                >
+                  {/* Subtle radial glow */}
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at center, hsl(202 85% 30% / 0.06) 0%, transparent 70%)' }} />
+
+                  {previewLoading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: 'hsl(202 85% 55% / 0.3)', borderTopColor: 'hsl(202 85% 65%)' }} />
+                      <p className="text-xs text-foreground/50">Loading preview…</p>
+                    </div>
+                  ) : isImage && previewBlobUrl ? (
+                    // Image resume — zoomable, draggable
+                    <div
+                      className="relative w-full h-full flex items-center justify-center"
+                      style={{ padding: '52px 12px 48px' }}
+                      onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    >
+                      <img
+                        src={previewBlobUrl}
+                        alt="Resume preview"
+                        draggable={false}
+                        className={`select-none max-w-full max-h-full object-contain shadow-2xl pointer-events-none ${
+                          resumeDragging ? '' : 'transition-transform duration-700'
+                        }`}
+                        style={{
+                          transform: `translate(${resumePos.x}px, ${resumePos.y}px) scale(${resumeZoom})`,
+                          transformOrigin: 'center center',
+                          transitionTimingFunction: resumeDragging ? 'none' : 'cubic-bezier(0.19, 1, 0.22, 1)',
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    // PDF — iframe (blob: URL, never blocked)
+                    <iframe
+                      key={previewBlobUrl || resumeUrl}
+                      src={previewBlobUrl || resumeUrl}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 'none', background: '#fff' }}
+                      title="Resume Preview"
+                      sandbox="allow-scripts allow-same-origin"
+                    />
+                  )}
+
+                  {/* Zoom controls — shown for images (same as certificate modal) */}
+                  {isImage && !previewLoading && previewBlobUrl && (
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+                      <button
+                        type="button"
+                        onClick={zoomOut}
+                        className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                        style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                        title="Zoom out"
+                      >
+                        <ZoomOut className="h-4 w-4" />
+                      </button>
+                      <div
+                        className="text-xs px-3 py-1.5 rounded-full border pointer-events-none min-w-[52px] text-center backdrop-blur-sm"
+                        style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                      >
+                        {Math.round(resumeZoom * 100)}%
+                      </div>
+                      <button
+                        type="button"
+                        onClick={zoomIn}
+                        className="p-1.5 rounded-full backdrop-blur-sm transition-all duration-200 border hover:bg-muted/10"
+                        style={{ background: 'var(--modal-btn-bg)', borderColor: 'var(--modal-btn-border)', color: 'var(--modal-btn-text)' }}
+                        title="Zoom in"
+                      >
+                        <ZoomIn className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
     </>
   );
 }
