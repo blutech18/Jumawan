@@ -10,6 +10,11 @@ import { useHeroSettingsStore } from "@/stores/useHeroSettingsStore";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { jsPDF } from "jspdf";
 import { ZoomIn, ZoomOut } from "lucide-react";
+import {
+  buildResumeStorageFetchUrls,
+  extractStorageId,
+  fetchFirstOk,
+} from "@/lib/convexSite";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -172,28 +177,28 @@ export function HeroSection() {
       return;
     }
 
+    if (!resumeUrl?.trim()) {
+      setPreviewLoading(false);
+      setPreviewBlobType("");
+      setPreviewBlobUrl(null);
+      return;
+    }
+
     const buildPreview = async () => {
       setPreviewLoading(true);
       try {
-        const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
-        let fetchUrl = resumeUrl;
-        try {
-          const parsed = new URL(resumeUrl);
-          const sid = parsed.searchParams.get('storageId');
-          if (sid && convexSiteUrl) {
-            fetchUrl = `${convexSiteUrl}/downloadByStorageId?storageId=${encodeURIComponent(sid)}&filename=preview`;
-          }
-        } catch { /* use resumeUrl as-is */ }
+        const sid = extractStorageId(resumeUrl);
+        const tryUrls = sid
+          ? buildResumeStorageFetchUrls(resumeUrl, sid, "preview")
+          : [resumeUrl];
 
-        const res = await fetch(fetchUrl);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetchFirstOk(tryUrls);
         const blob = await res.blob();
-        setPreviewBlobType(blob.type || '');
-        const url = URL.createObjectURL(blob);
-        setPreviewBlobUrl(url);
+        setPreviewBlobType(blob.type || "");
+        setPreviewBlobUrl(URL.createObjectURL(blob));
       } catch (err) {
-        console.warn('Preview fetch failed, falling back to direct URL', err);
-        setPreviewBlobType('');
+        console.warn("Preview fetch failed, falling back to direct URL", err);
+        setPreviewBlobType("");
         setPreviewBlobUrl(null);
       } finally {
         setPreviewLoading(false);
@@ -202,7 +207,7 @@ export function HeroSection() {
 
     buildPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isResumeModalOpen]);
+  }, [isResumeModalOpen, resumeUrl]);
 
   // Delay heavy animations until after initial render
   useEffect(() => {
@@ -229,22 +234,12 @@ export function HeroSection() {
     scrollToSection("contact");
   };
 
-  // Extract storageId from a Convex getImage URL if present
-  const extractStorageId = (url: string): string | null => {
-    try {
-      const parsed = new URL(url);
-      return parsed.searchParams.get('storageId');
-    } catch {
-      return null;
-    }
-  };
-
   const handleOpenResume = () => {
     setIsResumeModalOpen(true);
   };
 
   const handleModalDownload = async () => {
-    if (isDownloading) return;
+    if (isDownloading || !resumeUrl?.trim()) return;
     setIsDownloading(true);
 
     const currentToast = toast({
@@ -253,39 +248,34 @@ export function HeroSection() {
     });
 
     try {
-      const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
       const storageId = extractStorageId(resumeUrl);
 
-      let downloadUrl: string;
-
-      if (storageId && convexSiteUrl) {
-        // Pull the original filename from the URL if the admin encoded it (new format)
-        let storedFilename = 'Jumawan-Resume';
-        try {
-          const parsed = new URL(resumeUrl);
-          const fn = parsed.searchParams.get('filename');
-          if (fn) storedFilename = decodeURIComponent(fn);
-        } catch { /* ignore */ }
-        // Use the direct storage endpoint — no self-referencing fetch
-        downloadUrl = `${convexSiteUrl}/downloadByStorageId?storageId=${encodeURIComponent(storageId)}&filename=${encodeURIComponent(storedFilename)}`;
-      } else if (resumeUrl.startsWith('/') && !resumeUrl.startsWith('//')) {
-        // Local public file — create an anchor with same-origin href
-        const link = document.createElement('a');
+      if (resumeUrl.startsWith("/") && !resumeUrl.startsWith("//")) {
+        const link = document.createElement("a");
         link.href = resumeUrl;
-        link.download = 'Jumawan-Resume';
+        link.download = "Jumawan-Resume";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         return;
-      } else {
-        // Absolute external URL — open in new tab (cross-origin download attr doesn't work)
-        window.open(resumeUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      if (!storageId) {
+        window.open(resumeUrl, "_blank", "noopener,noreferrer");
         return;
       }
 
-      const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error(`Status ${response.status}`);
+      let storedFilename = "Jumawan-Resume";
+      try {
+        const parsed = new URL(resumeUrl);
+        const fn = parsed.searchParams.get("filename");
+        if (fn) storedFilename = decodeURIComponent(fn);
+      } catch {
+        /* ignore */
+      }
 
+      const tryUrls = buildResumeStorageFetchUrls(resumeUrl, storageId, storedFilename);
+      const response = await fetchFirstOk(tryUrls);
       const blob = await response.blob();
       const contentType = blob.type || '';
       const isImage = contentType.startsWith('image/');

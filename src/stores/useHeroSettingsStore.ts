@@ -24,7 +24,7 @@ interface HeroSettingsState {
 
 export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
     badges: [],
-    resumeUrl: '/Jumawan-Resume-UPDATED.png', // Default fallback
+    resumeUrl: '', // Set via Convex admin, or add a file under public/ and use /filename.ext
     profileImageUrl: '/placeholder.svg', // Default fallback
     hoverLogoUrl: '', // Default fallback - no hover logo
     loading: false,
@@ -40,7 +40,7 @@ export const useHeroSettingsStore = create<HeroSettingsState>((set) => ({
                 .map((item: any) => item.value) || [];
 
             const resume = data?.find((item: any) => item.type === 'resume');
-            const resumeUrl = resume && resume.value ? resume.value : '/Jumawan-Resume-UPDATED.png';
+            const resumeUrl = resume && resume.value ? resume.value : '';
 
             const profileImage = data?.find((item: any) => item.type === 'profile_image');
             const profileImageUrl = profileImage && profileImage.value ? profileImage.value : '/placeholder.svg';
