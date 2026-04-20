@@ -42,15 +42,29 @@ export function extractStorageId(url: string): string | null {
   }
 }
 
-/** Try URLs in order until one returns ok; throws with last status if all fail. */
+/**
+ * Try URLs in order until one returns ok.
+ * - Per-URL try/catch: network blocks and opaque failures surface as throws; we continue.
+ * - Uses explicit CORS mode so behavior is predictable for cross-origin Convex *.site URLs.
+ */
 export async function fetchFirstOk(urls: string[]): Promise<Response> {
-  let last: Response | undefined;
+  let lastStatus: number | undefined;
+  let lastNetworkError: Error | undefined;
+
   for (const u of urls) {
-    const res = await fetch(u);
-    if (res.ok) return res;
-    last = res;
+    try {
+      const res = await fetch(u, { mode: "cors", credentials: "omit", cache: "no-store" });
+      if (res.ok) return res;
+      lastStatus = res.status;
+    } catch (e) {
+      lastNetworkError = e instanceof Error ? e : new Error(String(e));
+    }
   }
-  throw new Error(last ? `HTTP ${last.status}` : "No fetch URLs");
+
+  if (lastStatus !== undefined) {
+    throw new Error(`HTTP ${lastStatus}`);
+  }
+  throw lastNetworkError ?? new Error("All fetch attempts failed");
 }
 
 export function buildResumeStorageFetchUrls(

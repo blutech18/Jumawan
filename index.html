@@ -140,6 +140,40 @@
           return false;
         }
       }, true);
+
+      // Remove Vercel Web Analytics / Speed Insights scripts if they slip past createElement hooks.
+      // webpage_content_reporter is ES-module content; loading it as a classic script causes
+      // "Unexpected token 'export'" in the console.
+      try {
+        function scriptSrcBlocked(src) {
+          return src.indexOf('webpage_content_reporter') !== -1 ||
+            (src.indexOf('vercel') !== -1 && (
+              src.indexOf('/insights') !== -1 ||
+              src.indexOf('analytics') !== -1 ||
+              src.indexOf('speed-insights') !== -1
+            ));
+        }
+        function stripBlockedScripts(root) {
+          if (!root || !root.querySelectorAll) return;
+          root.querySelectorAll('script[src]').forEach(function (s) {
+            if (scriptSrcBlocked(String(s.getAttribute('src') || ''))) s.remove();
+          });
+        }
+        stripBlockedScripts(document.documentElement);
+        var mo = new MutationObserver(function (records) {
+          records.forEach(function (rec) {
+            rec.addedNodes.forEach(function (node) {
+              if (node.nodeType !== 1) return;
+              if (node.tagName === 'SCRIPT' && scriptSrcBlocked(String(node.getAttribute('src') || ''))) {
+                node.remove();
+                return;
+              }
+              stripBlockedScripts(node);
+            });
+          });
+        });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      } catch (e) { /* ignore */ }
     })();
   </script>
 </head>
