@@ -33,6 +33,13 @@ export const create = mutation({
   args: {
     title: v.string(),
     description: v.string(),
+    // Extended fields
+    category: v.optional(v.string()),
+    year: v.optional(v.string()),
+    about: v.optional(v.string()),
+    gradient: v.optional(v.string()),
+    is_active: v.optional(v.boolean()),
+    // Media / links
     image_url: v.optional(v.string()),
     live_url: v.optional(v.string()),
     github_url: v.optional(v.string()),
@@ -50,6 +57,13 @@ export const update = mutation({
     id: v.id("projects"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    // Extended fields
+    category: v.optional(v.string()),
+    year: v.optional(v.string()),
+    about: v.optional(v.string()),
+    gradient: v.optional(v.string()),
+    is_active: v.optional(v.boolean()),
+    // Media / links
     image_url: v.optional(v.string()),
     live_url: v.optional(v.string()),
     github_url: v.optional(v.string()),

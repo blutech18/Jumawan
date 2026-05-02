@@ -7,9 +7,17 @@ export default defineSchema({
   projects: defineTable({
     title: v.string(),
     description: v.string(),
+    // Extended fields (added to match seed data)
+    category: v.optional(v.string()),
+    year: v.optional(v.string()),
+    about: v.optional(v.string()),
+    gradient: v.optional(v.string()),
+    is_active: v.optional(v.boolean()),
+    // Optional media / links
     image_url: v.optional(v.string()),
     live_url: v.optional(v.string()),
     github_url: v.optional(v.string()),
+    // Stack / technologies
     technologies: v.array(v.string()),
     featured: v.boolean(),
     order_index: v.number(),
