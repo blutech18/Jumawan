@@ -226,18 +226,25 @@ export function ProjectsSection() {
     >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
 
-      {project.image_url && (
-        <div className="relative h-[295px] sm:h-[359px] w-full overflow-hidden">
-          <OptimizedImage
-            src={project.image_url}
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-muted/5"
-            draggable={false}
-            fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--card-overlay-from)] via-transparent to-transparent" />
-        </div>
-      )}
+      <div className="relative h-[295px] sm:h-[359px] w-full overflow-hidden bg-muted/5 flex items-center justify-center">
+        {project.image_url ? (
+          <>
+            <OptimizedImage
+              src={project.image_url}
+              alt={project.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              draggable={false}
+              fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground/30" />}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--card-overlay-from)] via-transparent to-transparent" />
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-4 text-muted-foreground/20 group-hover:text-primary/30 transition-colors duration-500">
+            <FolderOpen className="w-16 h-16" />
+            <span className="text-[10px] font-medium opacity-50 uppercase tracking-widest">No Preview</span>
+          </div>
+        )}
+      </div>
 
       <div className="p-4 space-y-3 text-center">
         <h3 className="text-base font-semibold text-foreground leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2">
@@ -450,63 +457,65 @@ function SeeAllProjectsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl h-[85vh] md:h-[80vh] flex flex-col border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl">
-        <div className="relative shrink-0 px-5 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)]">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent rounded-t-2xl md:rounded-t-3xl" />
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl font-bold text-foreground">
-              All Projects ({projects.length})
-            </DialogTitle>
-          </DialogHeader>
-        </div>
+      <DialogContent className="w-[95vw] max-w-4xl border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 rounded-2xl md:rounded-3xl shadow-2xl">
+        <div className="flex flex-col h-[85svh] md:h-[80vh] overflow-hidden rounded-2xl md:rounded-3xl" data-lenis-prevent>
+          <div className="relative shrink-0 px-5 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)]">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent rounded-t-2xl md:rounded-t-3xl" />
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl font-bold text-foreground">
+                All Projects ({projects.length})
+              </DialogTitle>
+            </DialogHeader>
+          </div>
 
-        <div
-          className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-6 bg-[var(--surface-bg-alt)] overscroll-contain scroll-smooth scrollbar-hide"
-          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-12">
-            {projects.map((project, index) => (
-              <button
-                key={project.id}
-                type="button"
-                onClick={() => onSelect(index)}
-                className="group text-left rounded-xl border border-border/40 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-500 bg-background/40 backdrop-blur-sm"
-              >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/10">
-                  {project.image_url ? (
-                    <OptimizedImage
-                      src={project.image_url}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      draggable={false}
-                      fallbackIcon={<FolderOpen className="h-8 w-8 text-muted-foreground/30" />}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FolderOpen className="h-8 w-8 text-muted-foreground/30" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-                <div className="p-3 sm:p-4 min-h-[80px] sm:min-h-[90px] flex flex-col justify-start">
-                  <p className="text-xs sm:text-sm font-bold text-foreground leading-tight line-clamp-2 group-hover:text-cyan-400 transition-colors duration-300">
-                    {project.title}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {project.technologies.slice(0, 2).map((tech, i) => (
-                      <span key={i} className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary/80 font-medium whitespace-nowrap">
-                        {tech}
-                      </span>
-                    ))}
-                    {project.technologies.length > 2 && (
-                      <span className="text-[9px] sm:text-[10px] text-muted-foreground/40 font-medium">
-                        +{project.technologies.length - 2}
-                      </span>
+          <div
+            className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-6 bg-[var(--surface-bg-alt)] overscroll-contain scroll-smooth scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-12">
+              {projects.map((project, index) => (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => onSelect(index)}
+                  className="group text-left rounded-xl border border-border/40 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-500 bg-background/40 backdrop-blur-sm"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/10">
+                    {project.image_url ? (
+                      <OptimizedImage
+                        src={project.image_url}
+                        alt={project.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        draggable={false}
+                        fallbackIcon={<FolderOpen className="h-8 w-8 text-muted-foreground/30" />}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FolderOpen className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
-                </div>
-              </button>
-            ))}
+                  <div className="p-3 sm:p-4 min-h-[80px] sm:min-h-[90px] flex flex-col justify-start">
+                    <p className="text-xs sm:text-sm font-bold text-foreground leading-tight line-clamp-2 group-hover:text-cyan-400 transition-colors duration-300">
+                      {project.title}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {project.technologies.slice(0, 2).map((tech, i) => (
+                        <span key={i} className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary/80 font-medium whitespace-nowrap">
+                          {tech}
+                        </span>
+                      ))}
+                      {project.technologies.length > 2 && (
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground/40 font-medium">
+                          +{project.technologies.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </DialogContent>

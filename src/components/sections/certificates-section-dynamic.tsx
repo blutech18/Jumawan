@@ -537,68 +537,72 @@ function SeeAllCertificatesModal({
       lenis?.start();
       document.body.style.overflow = '';
     }
-    return () => { lenis?.start(); document.body.style.overflow = ''; };
+    return () => {
+      lenis?.start();
+      document.body.style.overflow = '';
+    };
   }, [isOpen, lenis]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-3xl border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 rounded-2xl md:rounded-3xl">
-        <div className="flex flex-col h-[85svh] sm:h-[75vh] overflow-hidden rounded-2xl md:rounded-3xl" data-lenis-prevent>
-          <div className="relative shrink-0 px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)]">
+      <DialogContent className="w-[95vw] max-w-4xl border-[var(--border-subtle)] bg-[var(--surface-modal)] backdrop-blur-2xl !p-0 !gap-0 [&>button]:z-20 rounded-2xl md:rounded-3xl shadow-2xl">
+        <div className="flex flex-col h-[85svh] md:h-[80vh] overflow-hidden rounded-2xl md:rounded-3xl" data-lenis-prevent>
+          <div className="relative shrink-0 px-5 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[var(--border-subtle)] bg-[var(--surface-bg-alt)]">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent rounded-t-2xl md:rounded-t-3xl" />
             <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-foreground">
                 All Certificates ({certificates.length})
               </DialogTitle>
             </DialogHeader>
           </div>
 
           <div
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 bg-[var(--surface-bg-alt)]"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+            className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-6 bg-[var(--surface-bg-alt)] overscroll-contain scroll-smooth scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
           >
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            {certificates.map((cert, index) => (
-              <button
-                key={cert.id}
-                type="button"
-                onClick={() => onSelect(index)}
-                className="group text-left rounded-xl border border-border/50 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_8px_rgba(34,211,238,0.1)] transition-all duration-300"
-              >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/10">
-                  {cert.image_url ? (
-                    <OptimizedImage
-                      src={cert.image_url}
-                      alt={cert.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      draggable={false}
-                      fallbackIcon={<Award className="h-8 w-8 text-muted-foreground/30" />}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Award className="h-8 w-8 text-muted-foreground/30" />
-                    </div>
-                  )}
-                  {cert.type && (
-                    <div className="absolute top-1.5 left-1.5">
-                      <Badge variant="secondary" className={`backdrop-blur-md border-0 text-[8px] px-1.5 py-0 ${cert.type === 'recognition' ? 'bg-primary/90 text-primary-foreground' : 'bg-secondary/90 text-secondary-foreground'}`}>
-                        {cert.type === 'recognition' ? <Trophy className="h-2.5 w-2.5 mr-0.5" /> : <Medal className="h-2.5 w-2.5 mr-0.5" />}
-                        <span className="capitalize">{cert.type}</span>
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-                <div className="p-2.5 sm:p-3 h-[72px] sm:h-[76px] flex flex-col justify-start">
-                  <p className="text-[11px] sm:text-xs font-medium text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                    {cert.title}
-                  </p>
-                  <p className="text-[10px] sm:text-[11px] text-muted-foreground/60 mt-1 truncate">
-                    {cert.issuer}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-12">
+              {certificates.map((cert, index) => (
+                <button
+                  key={cert.id}
+                  type="button"
+                  onClick={() => onSelect(index)}
+                  className="group text-left rounded-xl border border-border/40 overflow-hidden hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-500 bg-background/40 backdrop-blur-sm"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/10">
+                    {cert.image_url ? (
+                      <OptimizedImage
+                        src={cert.image_url}
+                        alt={cert.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        draggable={false}
+                        fallbackIcon={<Award className="h-8 w-8 text-muted-foreground/30" />}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Award className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
+                    )}
+                    {cert.type && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <Badge variant="secondary" className={`backdrop-blur-md border-0 text-[9px] sm:text-[10px] px-2 py-0.5 ${cert.type === 'recognition' ? 'bg-primary/90 text-primary-foreground' : 'bg-secondary/90 text-secondary-foreground'}`}>
+                          {cert.type === 'recognition' ? <Trophy className="h-2.5 w-2.5 mr-1" /> : <Medal className="h-2.5 w-2.5 mr-1" />}
+                          <span className="capitalize font-medium">{cert.type}</span>
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
+                  <div className="p-3 sm:p-4 min-h-[80px] sm:min-h-[90px] flex flex-col justify-start">
+                    <p className="text-xs sm:text-sm font-bold text-foreground leading-tight line-clamp-2 group-hover:text-cyan-400 transition-colors duration-300">
+                      {cert.title}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] text-muted-foreground/60 mt-2 truncate font-medium">
+                      {cert.issuer}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </DialogContent>

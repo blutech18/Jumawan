@@ -38,24 +38,31 @@ export function ProjectCard({ project, index, openModalAt }: ProjectCardProps) {
             >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-accent/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
 
-                {project.image_url && (
-                    <button
-                        type="button"
-                        className="relative h-48 w-full overflow-hidden will-change-transform transform-gpu text-left select-none"
-                        onClick={() => openModalAt(index)}
-                        aria-label={`View details for ${project.title}`}
-                        onContextMenu={(e) => e.preventDefault()}
-                    >
-                        <OptimizedImage
-                            src={project.image_url}
-                            alt={project.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 bg-muted/5"
-                            draggable={false}
-                            fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground" />}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--overlay-bg)] via-[var(--card-overlay-via)] to-transparent opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
-                    </button>
-                )}
+                <button
+                    type="button"
+                    className="relative h-48 w-full overflow-hidden will-change-transform transform-gpu text-left select-none bg-muted/5 flex items-center justify-center"
+                    onClick={() => openModalAt(index)}
+                    aria-label={`View details for ${project.title}`}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    {project.image_url ? (
+                        <>
+                            <OptimizedImage
+                                src={project.image_url}
+                                alt={project.title}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                draggable={false}
+                                fallbackIcon={<FolderOpen className="w-12 h-12 text-muted-foreground/30" />}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[var(--overlay-bg)] via-[var(--card-overlay-via)] to-transparent opacity-60 group-hover:opacity-10 transition-opacity duration-500" />
+                        </>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted/10 gap-3 group-hover:bg-muted/20 transition-colors duration-500">
+                            <FolderOpen className="w-12 h-12 text-muted-foreground/20 group-hover:text-primary/30 transition-colors duration-500" />
+                            <span className="text-[10px] font-medium text-muted-foreground/30 uppercase tracking-widest group-hover:text-primary/40 transition-colors duration-500">No Preview</span>
+                        </div>
+                    )}
+                </button>
                 <div className="p-6 flex flex-col">
                     <div className="flex-grow">
                         <h3 className="text-xl font-semibold text-foreground tracking-tight group-hover:text-primary transition-colors duration-300 leading-tight mb-2">
